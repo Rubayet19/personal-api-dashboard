@@ -1,12 +1,12 @@
 # General Development Rules
 
-Project Management:
+## Project Management
 - Reference project.md for all feature implementations
 - Ensure new code aligns with defined milestones
 - Consider cost optimizations defined in metrics
 - Maintain consistency with existing components
 
-You should do task-based development. 
+You should do task-based development. Git is already initialized in the project.
 
 ## Retain Memory
 
@@ -14,19 +14,15 @@ There will be a memory file called memory.md
 
 The memory file will contain the state of the project, and any notes or relevant details you'd need to remember between chats.
 
-Keep it up to date based on the project's current state. after a feature is implemented, update the memory file to reflect the current state of the project including the updated file structure. make sure when i create a new chat you can easily know what to do based on the project.md file and the memory file and coninue working from where you left off and onto the next task.
+Keep it up to date based on the project's current state. After a feature is implemented, update the memory file to reflect the current state of the project including the updated file structure. Make sure when I create a new chat you can easily know what to do based on the project.md file and the memory file and continue working from where you left off and onto the next task.
 
+## Update Development Guidelines
 
-## Update development guidelines
+Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
 
-If necessary, update the development guidelines to reflect anything you've learned while working on the project. Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
+Additionally, you are an expert in TypeScript, React, Vite, Python, FastAPI, Shadcn UI, Tailwind and use the latest version of all the packages you know of.
 
-
-
-
-Additinally, You are an expert in TypeScript, React, Vite, Python, FastAPI, Shadcn UI,Tailwind and use the latest version of all the packages you know of.
-
-Code Guidelines:
+## Code Guidelines
 
 ### File Size Limit
 All files must be under 200 lines of code. To achieve this:
@@ -38,17 +34,11 @@ All files must be under 200 lines of code. To achieve this:
 
 ### Refactoring Patterns
 When a file exceeds 200 lines, apply these refactoring patterns:
-**Extract Form
-Sections**:
-For large forms, extract sections into separate components
-2. **Extract Table Components**:
-For tables, extract headers, rows, and pagination
-3. **Extract Dialog Components**:
-Move modal dialogs to separate files
-4. **Extract Utility Functions**:
-Move helper functions to utility files
+1. **Extract Form Sections**: For large forms, extract sections into separate components
+2. **Extract Table Components**: For tables, extract headers, rows, and pagination
+3. **Extract Dialog Components**: Move modal dialogs to separate files
+4. **Extract Utility Functions**: Move helper functions to utility files
 5. **Extract Types**: Move complex types to separate files
-
 
 ## Code Style and Structure
 - Write concise, technical TypeScript code with accurate examples
@@ -70,7 +60,6 @@ Move helper functions to utility files
 
 
 - **Backend**:  
-
   - **Directory Structure**:  
     - `backend/app/`: Main source code  
     - `backend/tests/`: Tests  
@@ -78,9 +67,9 @@ Move helper functions to utility files
     - Environment Configuration:  
       - `.env` / `.env.example`: Environment variables  
 
+## GraphQL and Apollo Client Best Practices
 
-## GraphQL and Apollo Client best practices
-
+```javascript
 const graphqlBestPractices = [
   "Use Apollo Client for state management and data fetching",
   "Implement query components for data fetching",
@@ -90,7 +79,6 @@ const graphqlBestPractices = [
 ];
 
 // Folder structure
-
 const folderStructure = `
 src/
   components/
@@ -104,7 +92,6 @@ src/
 `;
 
 // Additional instructions
-
 const additionalInstructions = `
 1. Use Apollo Provider at the root of your app
 2. Implement custom hooks for Apollo operations
@@ -114,7 +101,7 @@ const additionalInstructions = `
 6. Use Apollo Client DevTools for debugging
 7. Follow naming conventions for queries, mutations, and fragments
 `;
-
+```
 
 ## Naming Conventions
 - Use lowercase with dashes for directories (e.g., components/form-wizard)
@@ -131,41 +118,33 @@ const additionalInstructions = `
 - Avoid try/catch blocks unless there's good reason to translate or handle error in that abstraction
 - Use explicit return types for all functions
 
-
 ## State Management
 - Use React Context for global state when needed
 - Implement proper state persistence using chrome.storage (for extension)
 - Implement proper cleanup in useEffect hooks
 
-## Whenever you need a React component
+## Whenever You Need a React Component
 
 1. Carefully consider the component's purpose, functionality, and design
-
 2. Think slowly, step by step, and outline your reasoning
-
 3. Check if a similar component already exists in any of the following locations
    1. packages/ui/src/components
    2. apps/spa/src/components
-
 4. If it doesn't exist, generate a detailed prompt for the component, including:
    - Component name and purpose
    - Desired props and their types
    - Any specific styling or behavior requirements
    - Mention of using Tailwind CSS for styling
    - Request for TypeScript usage
-
 5. URL encode the prompt.
-
 6. Create a clickable link in this format:
    [ComponentName](https://v0.dev/chat?q={encoded_prompt})
-
 7. After generating, adapt the component to fit our project structure:
    - Import
-     - common shadcn/ui components from <ui_package_alias>@repo/ui/components/ui/</ui_package_alias>
-     - app specific components from <app_package_alias>@/components</app_package_alias>
+     - common shadcn/ui components from @repo/ui/components/ui/
+     - app specific components from @/components
    - Ensure it follows our existing component patterns
    - Add any necessary custom logic or state management
-
 
 ## Syntax and Formatting
 - Use "function" keyword for pure functions
@@ -175,17 +154,16 @@ const additionalInstructions = `
 
 ## UI and Styling
 - Use Shadcn UI for components
-- use `npx shadcn@latest add <component-name>` to add new shadcn components
+- Use `npx shadcn@latest add <component-name>` to add new shadcn components
 - Implement Tailwind CSS for styling
 - Consider extension-specific constraints (popup dimensions, permissions)
 - Follow Material Design guidelines for Chrome extensions
 - When adding new shadcn component, document the installation command
 
-
 ## Performance Optimization
--SSR & Splitting: Optimize loads with SSR only when needed.
--Dynamic Loading: Wrap non-critical components in Suspense.
--Minimize Client Hooks: Reduce useEffect and similar hooks.
+- SSR & Splitting: Optimize loads with SSR only when needed
+- Dynamic Loading: Wrap non-critical components in Suspense
+- Minimize Client Hooks: Reduce useEffect and similar hooks
 
 ## Error Handling
 - Implement proper error boundaries
@@ -198,7 +176,6 @@ const additionalInstructions = `
 - Implement E2E tests for critical flows
 - Test across different Chrome versions
 - Test memory usage and performance
-
 
 ## FastAPI
 
@@ -215,6 +192,7 @@ Pydantic v2
 
 Use functional components (plain functions) and Pydantic models for input validation and response schemas. Use declarative route definitions with clear return type annotations. Use def for synchronous operations and async def for asynchronous ones. Minimize @app.on_event("startup") and @app.on_event("shutdown"); prefer lifespan context managers for managing startup and shutdown events. Use middleware for logging, error monitoring, and performance optimization. Optimize for performance using async functions for I/O-bound tasks, caching strategies, and lazy loading. Use HTTPException for expected errors and model them as specific HTTP responses. Use middleware for handling unexpected errors, logging, and error monitoring. Use Pydantic's BaseModel for consistent input/output validation and response schemas. Minimize blocking I/O operations; use asynchronous operations for all database calls and external API requests. Implement caching for static and frequently accessed data using tools like Redis or in-memory stores. Optimize data serialization and deserialization with Pydantic. Use lazy loading techniques for large datasets and substantial API responses. Refer to FastAPI documentation for Data Models, Path Operations, and Middleware for best practices.
 
+```python
 additional_instructions = """
 1. Use type hints for all function parameters and return values
 2. Implement proper input validation using Pydantic
@@ -224,24 +202,13 @@ additional_instructions = """
 6. Follow PEP 8 style guide for Python code
 7. Implement comprehensive unit and integration tests
 """
+```
 
 ## Security
 - Implement Content Security Policy
 - Sanitize user inputs
 - Handle sensitive data properly
-- Follow Chrome extension security best practices
 - Implement proper CORS handling
-
-## Git Usage
-Commit Message Prefixes:
-- "fix:" for bug fixes
-- "feat:" for new features
-- "perf:" for performance improvements
-- "docs:" for documentation changes
-- "style:" for formatting changes
-- "refactor:" for code refactoring
-- "test:" for adding missing tests
-- "chore:" for maintenance tasks
 
 Rules:
 - Use lowercase for commit messages
@@ -255,10 +222,3 @@ Rules:
 - Keep manifest.json well-documented
 - Don't include comments unless it's for complex logic
 - Document permission requirements
-
-## Development Workflow
-- Use proper version control
-- Implement proper code review process
-- Test in multiple environments
-- Follow semantic versioning for releases
-- Maintain changelog

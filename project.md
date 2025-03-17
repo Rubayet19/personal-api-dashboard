@@ -1,145 +1,216 @@
-# Project Overview
-You are building a Personal API Dashboard. It is a web app that allows users to monitor API usage, test API endpoints, track rate limits, and manage API keys in one centralized dashboard. Built with React, FastAPI, GraphQL, AWS (Lambda, API Gateway, DynamoDB, CloudWatch, Cognito), Supabase, and Redis, it provides a developer-friendly interface for handling multiple APIs efficiently.
+# Personal API Dashboard
 
-Frontend (React + Vite + ShadCN)
-Purpose: User interface for managing API requests, API key storage, and rate limit tracking.
-Features:
-API request builder (test GET, POST, PUT, DELETE).
-Dashboard for tracking API usage.
-Mock authentication (JWT) → Later switched to AWS Cognito.
-ShadCN + Tailwind CSS for UI components.
+## 1. Project Overview
 
-Tech Stack:
+**Name:** Personal API Dashboard  
+**Description:** A centralized web dashboard allowing users to manage, monitor, and test various APIs. Users can store their API keys, keep track of rate limits, view usage logs, and quickly build/test requests (GET, POST, PUT, DELETE). Ultimately, this application will integrate with AWS to handle authentication (Cognito), storage (DynamoDB), caching (ElastiCache), and logging (CloudWatch).
 
-Framework: React (Vite)
-UI: ShadCN (Tailwind CSS + Radix UI)
-GraphQL Client: Apollo Client
-State Management: React Context API (Zustand if needed)
+**Primary Use Cases:**
+1. **API Key Management:** Users can safely store, update, and delete API keys.
+2. **API Request Testing:** Users can quickly build and send requests, see formatted responses, and track usage.
+3. **Rate Limit & Usage Tracking:** Display remaining quota for each API and track usage.
+4. **Authentication:** Secure sign-up and login system (initially mock JWT, later replaced by AWS Cognito).
+5. **Logging & Monitoring:** Log requests in real-time (initially local logs, then AWS CloudWatch).
 
-🔹 Backend (FastAPI + GraphQL)
-Purpose: Serves as an API proxy, manages API keys, logs request usage, and tracks rate limits.
-Framework: FastAPI (Python)
-GraphQL Server: Strawberry GraphQL
-Mock Database: Moto (for DynamoDB testing) → Later replaced after it starts wokring locally with AWS DynamoDB
-Mock Authentication: JWT → Later replaced after it starts wokring locally  with AWS Cognito
-Mock Caching: Local Redis → Later replaced after it starts wokring locally  with AWS ElastiCache
-Mock Logging: Console/File → Later replaced after it starts wokring locally with AWS CloudWatch
-Hosting: Local Uvicorn → Later replaced after it starts wokring locally to AWS Lambda + API Gateway
+## 2. Goals & Objectives
 
-Frontend	React (Vite), ShadCN	@apollo/client graphql @shadcn/ui
-Backend	FastAPI, GraphQL (Strawberry)	fastapi uvicorn strawberry-graphql boto3 redis
-Database	Moto (mock DynamoDB)	moto boto3
-Authentication	Mock JWT	pyjwt
-Caching	Local Redis	redis
-Monitoring	Local logging (console)	logging
-Deployment	AWS Lambda + API Gateway	mangum
+1. **Centralized API Management**
+    * Provide a single interface for managing multiple API connections.
+    * Enable quick storage/retrieval of API keys with optional encryption.
+2. **Efficient API Testing**
+    * Give developers a request builder to test endpoints rapidly.
+    * Display JSON responses in a clean, human-readable format.
+3. **Streamlined Dev Experience**
+    * Use React + Tailwind for a modern, performant UI.
+    * Use FastAPI + Strawberry GraphQL for flexible, pythonic backend development.
+4. **Scalable Infrastructure**
+    * Start with local mocks (Moto for DynamoDB, local Redis, local JWT).
+    * Migrate seamlessly to AWS services (Lambda, API Gateway, DynamoDB, ElastiCache, Cognito, CloudWatch).
 
+## 3. Key Functional Requirements
 
-# Core Functionalities
+### 3.1 Authentication
+* Phase 1: Mock JWT-based login and signup for local development.
+* Phase 2: Replace mock JWT with AWS Cognito.
+* Sign-Up: Collect username, email, password.
+* Login: Validate user credentials, retrieve JWT/Cognito tokens, store token in client (localStorage or cookies).
 
-✅ 1. API Key Management
-Securely store API keys (encrypted in DynamoDB).
-Add, remove, and update API keys.
-✅ 2. API Request Builder & Testing
-Test APIs using GET, POST, PUT, DELETE requests.
-View formatted JSON responses.
-✅ 3. API Rate Limit & Usage Tracking
-Display API quota usage (e.g., GitHub API 4,500/5,000 requests left).
-Fetch rate limits automatically.
-✅ 4. User Authentication & Security
-Login/signup via AWS Cognito (OAuth + JWT).
-Encrypted API keys stored securely.
-✅ 5. Performance Optimization
-Cache API responses using Redis to avoid unnecessary requests.
-Monitor API logs via AWS CloudWatch.
+### 3.2 API Key Management
+* Add Key: User can add a new API key (stored encrypted in DynamoDB or mock DB).
+* Remove Key: Delete from storage.
+* Update Key: Edit existing keys.
+* View Keys: List of user's stored API keys.
 
+### 3.3 API Request Builder
+* Select Endpoint: Input URL or select from saved endpoints.
+* Choose HTTP Method: GET, POST, PUT, DELETE.
+* Headers & Body: Optionally specify request headers and body (JSON or form-data).
+* Send Request: Dispatch call through a backend proxy endpoint.
+* View Response: Formatted JSON (and status code, headers).
 
-# Full Step-by-Step Implementation Plan (Frontend to Backend)
+### 3.4 Rate Limit & Usage Tracking
+* Rate Limit Dashboard: Show how many requests remain for each integrated API (e.g., GitHub API 4,500/5,000).
+* Auto-Refresh: The system queries rate limit data periodically.
+* Local Caching (Phase 1): Store rate limit stats in local Redis.
+* AWS ElastiCache (Phase 2): Migrate to AWS for production usage.
 
-🔹 Phase 1: Frontend Setup (Static UI & Navigation)
-1️⃣ Set up the project structure & all the dependencies packages etc.
+### 3.5 Logging & Monitoring
+* Local Logging (Phase 1): Writes requests/responses to console or file.
+* AWS CloudWatch (Phase 2): Migrate logs to CloudWatch with structured log messages.
 
-Install React (Vite) + Tailwind + ShadCN.
-Configure routing (react-router-dom).
-Create a Navbar.tsx and Sidebar.tsx.
-2️⃣ Build the Landing Page (Landing.tsx)
+### 3.6 GraphQL Integration
+* Provide GraphQL endpoints (via Strawberry GraphQL) for certain data queries (optional or complementary to REST).
+* The front end can use Apollo Client to query and mutate data (e.g., fetching the user's stored API keys).
 
-Simple welcome screen with login/signup buttons.
-3️⃣ Build Dashboard Layout (Dashboard.tsx)
+## 4. Technical Architecture
 
-Design sidebar + API testing space.
-Create placeholder sections for future features.
-🔹 Phase 2: Authentication System (Mock JWT)
-4️⃣ Implement Login & Signup Forms (Auth.tsx)
+### 4.1 Frontend (React + Vite + ShadCN)
+* UI Library: ShadCN + TailwindCSS + Radix UI.
+* Routing: React Router for multi-page setup (Landing, Auth, Dashboard).
+* State Management: React Context API or Zustand if needed.
+* GraphQL Client: Apollo Client (or whichever the team prefers).
 
-Create email/password input fields.
-Store user session with local JWT authentication.
-5️⃣ Implement Backend Authentication (jwt_auth.py)
+### 4.2 Backend (FastAPI + Strawberry GraphQL)
+* FastAPI for REST endpoints and request proxying.
+* Strawberry for GraphQL schema/resolvers.
+* Database:
+    * Phase 1: Moto (Mock DynamoDB) for local dev.
+    * Phase 2: AWS DynamoDB.
+* Caching:
+    * Phase 1: Local Redis.
+    * Phase 2: AWS ElastiCache (Redis).
+* Authentication:
+    * Phase 1: Mock JWT.
+    * Phase 2: AWS Cognito.
+* Deployment:
+    * Phase 1: Local dev with Uvicorn.
+    * Phase 2: AWS Lambda + API Gateway (using Mangum).
 
-Generate & validate JWT tokens (mock Cognito for now).
-Restrict API access to logged-in users.
-🔹 Phase 3: API Key Management (Mock DynamoDB)
-6️⃣ Create API Key Management UI (ApiKeyManager.tsx)
+## 5. Implementation Phases
 
-UI for adding, deleting, and viewing API keys.
-7️⃣ Implement API Key Storage (Mock DynamoDB - moto_mock.py)
+1. **Phase 1: Basic Local Version**
+    * Frontend UI with Landing, Dashboard, Auth forms.
+    * Mock JWT for authentication.
+    * Moto for DynamoDB (store encrypted API keys).
+    * Local Redis for caching rate limits.
+    * Local file/console logging.
+    * Test coverage for all major flows.
+2. **Phase 2: AWS Integration** (Don't move to this step until user approves. Only after phase 1 works you will move to phase 2)
+    * Replace local JWT with AWS Cognito.
+    * Replace Moto with real DynamoDB.
+    * Replace local Redis with ElastiCache.
+    * Replace local logs with CloudWatch.
+    * Deploy backend via AWS Lambda + API Gateway.
+    * Deploy frontend via AWS S3 + CloudFront (or Vercel).
 
-Create a mock api_keys table.
-Encrypt API keys before storing them.
-Implement CRUD operations (Add, Remove, Update).
-🔹 Phase 4: API Request Builder & Testing
-8️⃣ Develop API Request Builder UI (ApiRequestForm.tsx)
+## 6. Use Cases & User Stories
 
-Input field for API URL.
-Dropdown for HTTP method selection.
-Request body input field.
-"Send Request" button.
-9️⃣ Implement API Proxy (api_proxy.py)
+1. **User Authentication**
+    * "As a user, I can create an account so that I can securely log in to my dashboard."
+    * "As a user, I want to log in using my email and password so that I can access my saved API keys."
+2. **API Key Storage**
+    * "As a user, I want to add my GitHub and Twitter API keys so that I can quickly make requests from the dashboard."
+3. **API Request Testing**
+    * "As a user, I want to build and send custom REST requests so that I can test endpoints from within the dashboard."
+4. **Rate Limit Tracking**
+    * "As a user, I want to see how many requests I have remaining for each API so I can avoid hitting rate limits."
+5. **Monitoring**
+    * "As an admin/dev, I want logs of all requests/responses so that I can troubleshoot errors and usage."
 
-FastAPI route that forwards requests to real APIs.
-Return formatted JSON responses.
-🔟 Display API Response (ApiResponse.tsx)
+## 7. Proposed File Structure
 
-Format response JSON for better readability.
-🔹 Phase 5: API Rate Limit & Usage Tracking
-1️⃣1️⃣ Fetch API Rate Limit UI (RateLimit.tsx)
+Below is a minimal file structure that keeps things organized while reducing the total number of files. Developers can add or split files if the project grows.
 
-Display remaining API requests per service.
-1️⃣2️⃣ Store Rate Limit Data (Mock Redis Locally - redis_cache.py)
+```
+personal-api-dashboard/
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── pages/
+│   │   │   ├── LandingPage.tsx      // Landing/home screen
+│   │   │   ├── DashboardPage.tsx    // Main dashboard UI
+│   │   │   └── AuthPage.tsx         // Login/Signup
+│   │   ├── components/
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── ApiKeyManager.tsx
+│   │   │   ├── ApiRequestForm.tsx
+│   │   │   ├── ApiResponse.tsx
+│   │   │   └── RateLimit.tsx
+│   │   └── tailwind.css             // Tailwind + ShadCN styles
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+│
+├── backend/
+│   ├── main.py                      // FastAPI + Strawberry + routes + mock logic
+│   └── requirements.txt
+│
+├── .gitignore
+└── README.md
+├── .cursorrules
+└── memory.md
+├── project.md
 
-Save rate limit data in local Redis.
-Auto-refresh every X minutes.
-🔹 Phase 6: Performance Optimization & Monitoring
-1️⃣3️⃣ Cache API Responses (Mock Redis Locally - redis_cache.py)
+```
 
-Cache responses locally before making API calls.
-1️⃣4️⃣ Implement Local Logging (logger.py)
+### Notes on the File Structure
 
-Log API requests & responses to a local file.
-Track API usage & errors.
-🔹 Phase 7: Final Testing & AI Agent Confirmation
-1️⃣5️⃣ AI Agent Confirms Full Functionality
+* **frontend/**
+    * **src/**: Core React source code.
+    * **pages/**: Page-level components (Landing, Dashboard, Auth).
+    * **components/**: UI building blocks and specialized components (e.g., request builder, rate limit display).
+    * **tailwind.css**: Central style entry for Tailwind + ShadCN.
+* **backend/**
+    * **main.py**:
+        * FastAPI application instance.
+        * Strawberry GraphQL schema/resolvers.
+        * Mock JWT logic and user login routes.
+        * Mock DynamoDB setup with Moto.
+        * Redis caching logic.
+        * Logging.
+        * To keep it minimal, these can be grouped with clear comment headings.
+    * **requirements.txt**: Python dependencies (fastapi, uvicorn, strawberry-graphql, pyjwt, boto3, redis, etc.).
+* **.gitignore**: Exclude node_modules, Python __pycache__, environment files, etc.
+* **README.md**:
+    * Setup instructions (local dev, environment config).
+    * Explanation of future AWS integration steps.
 
-AI runs tests on all features.
-AI confirms: "All features are working correctly. You can now set up AWS. Prompts user to set up AWS services and test before implementing the next phase."
+## 8. Acceptance Criteria
 
-🔹 Phase 8: AWS Migration
-1️⃣6️⃣ Replace Mock Components with AWS Services
+1. **Core Functionality**
+    * Users can sign up and log in using mock JWTs.
+    * Users can add, update, and delete API keys stored in the mock database.
+    * Users can build and send REST requests to external APIs.
+    * The system displays JSON responses in a readable format.
+    * Logs record each request and response.
+2. **Rate Limit Tracking**
+    * Dashboard accurately shows user's remaining requests (for at least one external API).
+    * Data is cached in local Redis.
+3. **GraphQL Endpoint**
+    * Available at a path like /graphql, serving Strawberry schema.
+    * Can fetch or mutate data (e.g., user info, API key info).
+4. **Deployment**
+    * Phase 1: Runs locally via vite dev for frontend and uvicorn main:app --reload for backend.
+    * Phase 2: Hosted on AWS (Lambda + API Gateway for backend, S3 + CloudFront for frontend).
 
-Auth: Replace JWT with AWS Cognito.
-Database: Replace Moto with AWS DynamoDB.
-Caching: Replace local Redis with AWS ElastiCache.
-Logging: Replace local logs with AWS CloudWatch.
-1️⃣7️⃣ Deploy Backend to AWS Lambda
+## 9. Risks & Considerations
 
-Use Mangum to make FastAPI serverless.
-Configure AWS API Gateway.
-1️⃣8️⃣ Deploy Frontend to AWS (S3 + CloudFront or Vercel)
+1. **Security of API Keys**
+    * Even though it's a personal dashboard, encryption and secure storage are critical.
+2. **Rate Limits**
+    * Some APIs (like GitHub) have fairly generous limits, while others do not. Implement robust error handling and caching.
+3. **AWS Costs**
+    * Certain AWS services can incur costs. Carefully monitor usage in non-production environments.
+4. **Scalability**
+    * For large volumes of data, DynamoDB, ElastiCache, and CloudWatch metrics will be essential.
+    * The architecture is designed to scale if the user base grows.
+5. **User Experience**
+    * Keep the UI minimal but intuitive. Provide immediate feedback for request results or error states.
 
-Build & upload React app to AWS S3.
-Set up CloudFront for global distribution.
-
-# Current File Structure
+## Current File Structure
 personal-api-dashboard/
 └── project.md
 └── .cursorrules (or project rules)
