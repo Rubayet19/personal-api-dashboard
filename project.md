@@ -86,13 +86,13 @@
     * Phase 1: Local dev with Uvicorn.
     * Phase 2: AWS Lambda + API Gateway (using Mangum).
 
-# 5. Full Step-by-Step Implementation
+## 5. Full Step-by-Step Implementation
 
 The project is broken down into phases to ensure a smooth incremental build. Each phase lists what needs to be done and how the features integrate.
 
-## Phase 1: Frontend Setup (Static UI & Navigation)
+### Phase 1: Frontend Setup (Static UI & Navigation)
 
-### 1.1 Set Up Project Structure & Dependencies
+#### 1.1 Set Up Project Structure & Dependencies
 
 **Frontend**
 - Initialize a Vite + React project.

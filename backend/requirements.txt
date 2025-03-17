@@ -1,0 +1,11 @@
+fastapi==0.115.11
+uvicorn==0.34.0
+strawberry-graphql==0.262.5
+python-jose[cryptography]==3.4.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.20
+pydantic[email]==2.10.6
+redis==5.2.1
+moto==5.1.1
+boto3==1.37.13
+python-dotenv==1.0.1 

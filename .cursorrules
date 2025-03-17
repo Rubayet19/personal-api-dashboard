@@ -6,7 +6,7 @@
 - Consider cost optimizations defined in metrics
 - Maintain consistency with existing components
 
-You should do task-based development. Git is already initialized in the project.
+You should do task-based development. Git is already initialized in the project. Follow these principles ALWAYS: TDD, DRY, KISS, YAGNI.
 
 ## Retain Memory
 
@@ -174,8 +174,6 @@ const additionalInstructions = `
 ## Testing
 - Write unit tests for utilities and components
 - Implement E2E tests for critical flows
-- Test across different Chrome versions
-- Test memory usage and performance
 
 ## FastAPI
 
