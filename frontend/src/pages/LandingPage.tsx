@@ -49,7 +49,9 @@ function LandingPage() {
                   endpoints, and monitoring rate limits.
                 </p>
                 <div>
-                  <Button size="lg">Get Started</Button>
+                  <Link to="/dashboard">
+                    <Button size="lg">Get Started</Button>
+                  </Link>
                 </div>
               </div>
               <div className="lg:w-1/2 mt-8 lg:mt-0">
