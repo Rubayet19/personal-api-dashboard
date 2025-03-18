@@ -31,15 +31,33 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
   const [useApiKey, setUseApiKey] = useState<boolean>(false);
   const [selectedApiKeyId, setSelectedApiKeyId] = useState<string>('');
   const [availableApiKeys, setAvailableApiKeys] = useState<any[]>([]);
+  const [isLoadingKeys, setIsLoadingKeys] = useState<boolean>(false);
 
   // Fetch available API keys on component mount
   useEffect(() => {
     const fetchApiKeys = async () => {
+      setIsLoadingKeys(true);
       try {
-        const response = await api.get('/api/keys');
-        setAvailableApiKeys(response.data);
+        // Our API directly returns the array of keys, not wrapped in a data property
+        const keys = await api.get('/api/keys');
+        console.log('API keys received:', keys);
+        
+        if (keys && Array.isArray(keys)) {
+          setAvailableApiKeys(keys);
+          console.log('Available API keys set:', keys.length);
+          // If we have keys, set the first one as selected by default
+          if (keys.length > 0) {
+            setSelectedApiKeyId(keys[0].id);
+          }
+        } else {
+          console.error('Unexpected API keys response format:', keys);
+          setAvailableApiKeys([]);
+        }
       } catch (error) {
         console.error('Failed to fetch API keys:', error);
+        setAvailableApiKeys([]);
+      } finally {
+        setIsLoadingKeys(false);
       }
     };
     
@@ -73,21 +91,25 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
       .reduce((acc, h) => ({ ...acc, [h.key]: h.value }), {});
 
     try {
+      // Only include api_key_id if checkbox is checked AND a key is actually selected
       const requestData = {
         url,
         method,
         headers: validHeaders,
         body: method !== 'GET' && method !== 'HEAD' ? body : undefined,
-        api_key_id: useApiKey ? selectedApiKeyId : undefined
+        api_key_id: useApiKey && selectedApiKeyId ? selectedApiKeyId : undefined
       };
 
+      console.log('Sending request with data:', requestData);
       const response = await api.post('/api/proxy', requestData);
       
       if (onResponseReceived) {
-        onResponseReceived(response.data);
+        // The response is directly the data we need, not wrapped in a data property
+        onResponseReceived(response);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to send request');
+      setError(err.message || 'Failed to send request');
+      console.error('API request error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +156,7 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
                 <SelectTrigger id="method">
                   <SelectValue placeholder="HTTP Method" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-slate-950">
                   <SelectItem value="GET">GET</SelectItem>
                   <SelectItem value="POST">POST</SelectItem>
                   <SelectItem value="PUT">PUT</SelectItem>
@@ -151,28 +173,57 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
               type="checkbox"
               id="useApiKey"
               checked={useApiKey}
-              onChange={(e) => setUseApiKey(e.target.checked)}
+              onChange={(e) => {
+                setUseApiKey(e.target.checked);
+                // If unchecking, clear the selected key
+                if (!e.target.checked) {
+                  setSelectedApiKeyId('');
+                }
+                // If checking and we have keys, select the first one by default
+                else if (availableApiKeys && availableApiKeys.length > 0 && !selectedApiKeyId) {
+                  setSelectedApiKeyId(availableApiKeys[0].id);
+                }
+              }}
               className="h-4 w-4"
             />
             <Label htmlFor="useApiKey">Use stored API key</Label>
             
             {useApiKey && (
-              <Select
-                value={selectedApiKeyId}
-                onValueChange={(value) => setSelectedApiKeyId(value)}
-                disabled={availableApiKeys.length === 0}
-              >
-                <SelectTrigger className="ml-2">
-                  <SelectValue placeholder="Select API key" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableApiKeys.map((key) => (
-                    <SelectItem key={key.id} value={key.id}>
-                      {key.api_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                {isLoadingKeys ? (
+                  <div className="ml-2 flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span className="text-sm text-gray-500">Loading keys...</span>
+                  </div>
+                ) : availableApiKeys && availableApiKeys.length > 0 ? (
+                  <div className="ml-2 flex-1">
+                    <Select
+                      value={selectedApiKeyId}
+                      onValueChange={(value) => setSelectedApiKeyId(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select API key" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-slate-950">
+                        {availableApiKeys.map((key) => (
+                          <SelectItem key={key.id} value={key.id}>
+                            {key.api_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedApiKeyId && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Your request will include credentials from the selected API key
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="ml-2 text-sm text-gray-500">
+                    No API keys available. <a href="/dashboard/api-keys" className="text-blue-500 hover:underline">Add keys here</a>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
