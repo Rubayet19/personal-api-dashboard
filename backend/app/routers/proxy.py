@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from ..schemas.proxy import ProxyRequest, ProxyResponse
 from ..utils.auth import get_current_user
-from ..utils.mock_db import get_api_key
+from ..utils.mock_db import get_api_key, log_request
 from ..utils import redis_client
 
 router = APIRouter(
@@ -77,6 +77,15 @@ async def proxy_request(request: ProxyRequest, current_user: dict = Depends(get_
             # Convert headers to dict
             response_headers = dict(response.headers)
             
+            # Log the request
+            log_request(
+                user_id=user_id,
+                url=str(request.url),
+                method=request.method,
+                status_code=response.status_code,
+                time_taken=time_taken
+            )
+            
             # Only track rate limits if using a stored API key
             if using_stored_key:
                 # Extract rate limit headers if available
@@ -97,9 +106,29 @@ async def proxy_request(request: ProxyRequest, current_user: dict = Depends(get_
             
         except httpx.RequestError as e:
             print(f"Request error: {e}")
+            
+            # Log failed request
+            log_request(
+                user_id=user_id,
+                url=str(request.url),
+                method=request.method,
+                status_code=500,  # Use 500 for client errors
+                time_taken=(time.time() - start_time) * 1000
+            )
+            
             raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
         except Exception as e:
             print(f"Unexpected error: {e}")
+            
+            # Log failed request
+            log_request(
+                user_id=user_id,
+                url=str(request.url),
+                method=request.method,
+                status_code=500,  # Use 500 for other errors
+                time_taken=(time.time() - start_time) * 1000
+            )
+            
             raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 

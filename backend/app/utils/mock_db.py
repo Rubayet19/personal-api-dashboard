@@ -1,9 +1,10 @@
 import uuid
 import boto3
-from datetime import datetime
+from datetime import datetime, timedelta
 from moto import mock_aws
 import os
 from cryptography.fernet import Fernet
+from typing import List, Dict, Any, Optional
 
 # Initialize moto mock
 dynamodb_mock = mock_aws()
@@ -16,6 +17,10 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 # In a real app, this would be stored securely and not hardcoded
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", Fernet.generate_key())
 cipher_suite = Fernet(ENCRYPTION_KEY)
+
+# In-memory request log storage
+# Structure: { user_id: [{ timestamp, url, method, status_code, time_taken }] }
+request_logs = {}
 
 # Check if table exists and create if not
 def ensure_tables_exist():
@@ -174,4 +179,53 @@ def delete_api_key(key_id: str):
 # Alias for get_api_key for backward compatibility
 def get_api_key_by_id(key_id: str):
     """Alias for get_api_key function"""
-    return get_api_key(key_id) 
+    return get_api_key(key_id)
+
+# Get API keys for a user (alias for get_user_api_keys)
+def get_api_keys_for_user(user_id: str):
+    """Get all API keys for a specific user"""
+    return get_user_api_keys(user_id)
+
+# Log API request
+def log_request(user_id: str, url: str, method: str, status_code: int, time_taken: float):
+    """Log an API request to the in-memory store"""
+    if user_id not in request_logs:
+        request_logs[user_id] = []
+    
+    request_logs[user_id].append({
+        "timestamp": datetime.now().isoformat(),
+        "url": str(url),
+        "method": method,
+        "status_code": status_code,
+        "time_taken": time_taken
+    })
+    
+    # Keep only last 1000 requests per user to avoid memory issues
+    if len(request_logs[user_id]) > 1000:
+        request_logs[user_id] = request_logs[user_id][-1000:]
+
+# Get request logs for a user within a time period
+def get_requests_log(user_id: str, days: int = 30) -> List[Dict[str, Any]]:
+    """
+    Get request logs for a user within the specified number of days
+    
+    Args:
+        user_id: The user ID
+        days: Number of days to look back (default: 30)
+        
+    Returns:
+        List of request log entries
+    """
+    if user_id not in request_logs:
+        return []
+    
+    cutoff_date = datetime.now() - timedelta(days=days)
+    cutoff_str = cutoff_date.isoformat()
+    
+    # Filter logs by date
+    filtered_logs = [
+        log for log in request_logs[user_id] 
+        if log["timestamp"] >= cutoff_str
+    ]
+    
+    return filtered_logs 
