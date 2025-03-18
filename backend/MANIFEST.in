@@ -1,0 +1,16 @@
+include README.md
+include requirements.txt
+include .env.example
+
+# Exclude tests
+recursive-exclude tests *
+recursive-exclude */tests *
+
+# Exclude development configs
+exclude .gitignore
+exclude run_tests.py
+
+# Exclude any cache directories
+recursive-exclude __pycache__ *
+recursive-exclude *.py[cod]
+recursive-exclude *$py.class 

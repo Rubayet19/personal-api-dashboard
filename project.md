@@ -135,6 +135,7 @@ The project is broken down into phases to ensure a smooth incremental build. Eac
 - Login Form: Input fields for email, password.
 - Store the user's JWT token in memory or in localStorage once retrieved (for mocking).
 - Use React state or form libraries to handle inputs.
+- Dont forget to do Integration tests whenever possible
 
 ### 2.2 Backend Authentication (main.py)
 

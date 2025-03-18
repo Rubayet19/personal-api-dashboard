@@ -23,6 +23,9 @@ MANIFEST
 .env
 venv/
 .venv/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Node
 node_modules/
@@ -34,6 +37,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+coverage/
 
 # IDE
 .idea/
