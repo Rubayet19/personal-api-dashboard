@@ -28,6 +28,7 @@ async def proxy_request(request: ProxyRequest, current_user: dict = Depends(get_
     # If an API key ID is provided, fetch it from the database
     headers = dict(request.headers)
     api_name = None
+    using_stored_key = False
     
     if request.api_key_id:
         api_key = get_api_key(request.api_key_id)
@@ -40,16 +41,15 @@ async def proxy_request(request: ProxyRequest, current_user: dict = Depends(get_
         
         # Get API name for rate limit tracking
         api_name = api_key.get("api_name")
+        using_stored_key = True
         print(f"Using API key for: {api_name}")
-
-    # If no API name from API key, try to determine from URL
-    if not api_name:
-        # Extract API name from URL if possible
+    else:
+        # Extract API name from URL if needed for logging
         try:
             from urllib.parse import urlparse
             domain = urlparse(str(request.url)).netloc
             api_name = domain.split('.')[-2]  # e.g., api.github.com -> github
-            print(f"Extracted API name from URL: {api_name}")
+            print(f"Making request to {api_name} without stored API key")
         except Exception as e:
             print(f"Error extracting API name from URL: {e}")
             api_name = "unknown"
@@ -77,19 +77,15 @@ async def proxy_request(request: ProxyRequest, current_user: dict = Depends(get_
             # Convert headers to dict
             response_headers = dict(response.headers)
             
-            # Print all headers for debugging
-            print(f"Response headers: {json.dumps(dict(response.headers))}")
-            
-            # Extract rate limit headers if available
-            rate_limit_headers = _extract_rate_limit_headers(response_headers)
-            print(f"Extracted rate limit headers: {rate_limit_headers}")
-            
-            # Store rate limit information in Redis if headers are available
-            if rate_limit_headers:
-                rate_limit_info = _store_rate_limit_info(rate_limit_headers, api_name, user_id)
-                print(f"Stored rate limit info: {rate_limit_info}")
-            else:
-                print(f"No rate limit headers found for {api_name}")
+            # Only track rate limits if using a stored API key
+            if using_stored_key:
+                # Extract rate limit headers if available
+                rate_limit_headers = _extract_rate_limit_headers(response_headers)
+                
+                if rate_limit_headers:
+                    # Store rate limit information in Redis
+                    rate_limit_info = _store_rate_limit_info(rate_limit_headers, api_name, user_id)
+                    print(f"Stored rate limit info for {api_name}: {rate_limit_info}")
             
             # Return the response
             return ProxyResponse(
@@ -168,10 +164,6 @@ def _extract_rate_limit_headers(headers: Dict[str, str]) -> Dict[str, str]:
 def _store_rate_limit_info(rate_limit_headers: Dict[str, str], api_name: str, user_id: str) -> Optional[Dict[str, Any]]:
     """
     Parse rate limit headers and store them in Redis
-    
-    Different APIs use different header formats:
-    - GitHub: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
-    - Twitter: x-rate-limit-limit, x-rate-limit-remaining, x-rate-limit-reset
     """
     try:
         # Initialize with default values
@@ -179,18 +171,9 @@ def _store_rate_limit_info(rate_limit_headers: Dict[str, str], api_name: str, us
         remaining = None
         reset_time = None
         
-        # Normalize API name to avoid multiple entries for the same API
-        # For example "github", "Github", "github-public" should all be stored as "github"
-        normalized_api_name = api_name.lower()
-        if "github" in normalized_api_name:
-            normalized_api_name = "github"
-        elif "twitter" in normalized_api_name:
-            normalized_api_name = "twitter"
-        elif "openai" in normalized_api_name:
-            normalized_api_name = "openai"
+        # Clean up API name - simple lowercase for consistency
+        api_name = api_name.lower()
             
-        print(f"Using normalized API name: {normalized_api_name} (was {api_name})")
-        
         # Check for GitHub format first (case-sensitive)
         if "X-RateLimit-Limit" in rate_limit_headers and "X-RateLimit-Remaining" in rate_limit_headers:
             print("Found GitHub format rate limit headers")
@@ -208,7 +191,6 @@ def _store_rate_limit_info(rate_limit_headers: Dict[str, str], api_name: str, us
         if limit is None or remaining is None:
             # Lowercase all keys for easier matching
             normalized_headers = {k.lower(): v for k, v in rate_limit_headers.items()}
-            print(f"Normalized headers: {normalized_headers}")
             
             # Try to find limit
             for key in ["x-ratelimit-limit", "x-rate-limit-limit", "ratelimit-limit"]:
@@ -259,10 +241,10 @@ def _store_rate_limit_info(rate_limit_headers: Dict[str, str], api_name: str, us
             else:
                 ttl = 3600  # Default to 1 hour
             
-            # Store in Redis using the normalized API name
-            print(f"Storing rate limit for {normalized_api_name} (user {user_id}): limit={limit}, remaining={remaining}, reset={reset_time}, ttl={ttl}")
+            # Store in Redis
+            print(f"Storing rate limit for {api_name} (user {user_id}): limit={limit}, remaining={remaining}, reset={reset_time}, ttl={ttl}")
             rate_limit = redis_client.store_rate_limit(
-                api_name=normalized_api_name,
+                api_name=api_name,
                 limit=limit,
                 remaining=remaining,
                 reset_time=reset_time,
@@ -271,7 +253,7 @@ def _store_rate_limit_info(rate_limit_headers: Dict[str, str], api_name: str, us
             )
             
             return {
-                "api_name": normalized_api_name,
+                "api_name": api_name,
                 "limit": limit,
                 "remaining": remaining,
                 "reset_time": reset_time.isoformat() if reset_time else None,

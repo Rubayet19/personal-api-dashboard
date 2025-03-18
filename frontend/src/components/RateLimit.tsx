@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { ReloadIcon, InfoCircledIcon, ArrowRightIcon } from "@radix-ui/react-icons";
+import { ReloadIcon, InfoCircledIcon, ArrowRightIcon, PlusIcon } from "@radix-ui/react-icons";
 import { Skeleton } from "./ui/skeleton";
 import { api, type RateLimit as RateLimitType } from "@/lib/api";
 import { Link } from "react-router-dom";
@@ -52,7 +52,7 @@ export function RateLimit({ apiKeyId }: RateLimitProps) {
       } else {
         // No rate limits found
         setRateLimits([]);
-        setDebugInfo("No rate limit data found. Try making API requests with your stored API keys.");
+        setDebugInfo("No rate limit data found. Make sure you have API keys stored and used them for requests.");
       }
     } catch (err) {
       console.error("Error fetching rate limits:", err);
@@ -110,15 +110,24 @@ export function RateLimit({ apiKeyId }: RateLimitProps) {
         </div>
         <h3 className="text-xl font-medium text-gray-900 mb-2">No Rate Limit Data</h3>
         <p className="text-gray-500 mb-4 max-w-md">
-          Rate limit data is collected when you make API requests through the Request Builder using your stored API keys.
+          Rate limits are only tracked when you make API requests using your stored API keys.
         </p>
-        <Link
-          to="/dashboard/request-builder" 
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
-        >
-          Go to Request Builder
-          <ArrowRightIcon className="ml-2 h-4 w-4" />
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            to="/dashboard/api-keys" 
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
+          >
+            <PlusIcon className="mr-2 h-4 w-4" />
+            Manage API Keys
+          </Link>
+          <Link
+            to="/dashboard/request-builder" 
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+          >
+            Request Builder
+            <ArrowRightIcon className="ml-2 h-4 w-4" />
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
@@ -164,18 +173,21 @@ export function RateLimit({ apiKeyId }: RateLimitProps) {
       {!error && rateLimits.length === 0 && !isLoading && (
         <Alert className="mb-4">
           <InfoCircledIcon className="h-4 w-4" />
-          <AlertTitle>How to see rate limits</AlertTitle>
+          <AlertTitle>How to track rate limits</AlertTitle>
           <AlertDescription>
             <p className="mt-1">
-              To see your API rate limits:
+              Rate limits are only tracked when you use stored API keys for requests:
             </p>
             <ol className="list-decimal pl-5 mt-2 space-y-1 text-sm">
+              <li>Add your API keys in the API Key Manager page</li>
               <li>Go to API Request Builder</li>
-              <li>Make a request to an API endpoint (like <code className="text-xs bg-gray-100 rounded p-0.5">https://api.github.com/user</code>)</li>
-              <li>Check "Use stored API key" and select your API key</li>
-              <li>Send the request</li>
+              <li>Make sure to check "Use stored API key" and select your key</li>
+              <li>Send the request to an API that returns rate limit headers</li>
               <li>Return to this page and click Refresh</li>
             </ol>
+            <p className="mt-2 text-sm italic">
+              Note: Rate limit tracking works with GitHub, Twitter, and many other popular APIs that return standard rate limit headers.
+            </p>
           </AlertDescription>
         </Alert>
       )}

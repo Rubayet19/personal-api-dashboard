@@ -153,8 +153,21 @@ async def delete_api_key(
                 detail="Not authorized to delete this API key"
             )
         
+        # Get API name before deletion
+        api_name = key.get("api_name", "").lower()
+        
         # Delete the key
         mock_db.delete_api_key(key_id)
+        
+        # Also delete associated rate limits if any
+        try:
+            from ..utils import redis_client
+            if api_name:
+                redis_client.delete_rate_limit(api_name=api_name, user_id=current_user["sub"])
+                print(f"Deleted rate limit data for {api_name}")
+        except Exception as e:
+            # Log error but don't fail the request
+            print(f"Error deleting rate limit data: {e}")
         
         return None
     except HTTPException:
