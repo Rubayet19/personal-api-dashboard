@@ -1,6 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export function Sidebar() {
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
     <aside className="bg-slate-900 text-slate-100 w-64 min-h-screen p-4 hidden md:block">
       <div className="flex items-center space-x-2 mb-8">
@@ -24,7 +30,7 @@ export function Sidebar() {
       <nav className="space-y-1">
         <Link
           to="/dashboard"
-          className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800 bg-slate-800"
+          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800 ${isActive('/dashboard') ? 'bg-slate-800' : ''}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +51,7 @@ export function Sidebar() {
         
         <Link
           to="/dashboard/api-keys"
-          className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800"
+          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800 ${isActive('/dashboard/api-keys') ? 'bg-slate-800' : ''}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -66,7 +72,7 @@ export function Sidebar() {
         
         <Link
           to="/dashboard/rate-limits"
-          className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800"
+          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800 ${isActive('/dashboard/rate-limits') ? 'bg-slate-800' : ''}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -87,7 +93,7 @@ export function Sidebar() {
         
         <Link
           to="/dashboard/request-builder"
-          className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800"
+          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-slate-800 ${isActive('/dashboard/request-builder') ? 'bg-slate-800' : ''}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

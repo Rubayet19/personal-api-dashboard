@@ -169,4 +169,9 @@ def update_api_key(key_id: str, api_name: str = None, api_key: str = None):
 def delete_api_key(key_id: str):
     """Delete an API key from the mock DynamoDB"""
     api_keys_table.delete_item(Key={'id': key_id})
-    return True 
+    return True
+
+# Alias for get_api_key for backward compatibility
+def get_api_key_by_id(key_id: str):
+    """Alias for get_api_key function"""
+    return get_api_key(key_id) 

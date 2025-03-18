@@ -8,4 +8,5 @@ pydantic[email]==2.10.6
 redis==5.2.1
 moto==5.1.1
 boto3==1.37.13
-python-dotenv==1.0.1 
+python-dotenv==1.0.1
+httpx==0.28.0 

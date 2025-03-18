@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from .routers import auth, api_keys
+from .routers import auth, api_keys, proxy
 
 # Load environment variables
 load_dotenv()
@@ -27,6 +27,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(api_keys.router)
+app.include_router(proxy.router)
 
 @app.get("/")
 async def root():
