@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import DashboardPage from './pages/DashboardPage'
 import AuthPage from './pages/AuthPage'
+import ApiKeysPage from './pages/ApiKeysPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
         {/* Protected Dashboard Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/dashboard/api-keys" element={<DashboardPage />} />
+          <Route path="/dashboard/api-keys" element={<ApiKeysPage />} />
           <Route path="/dashboard/rate-limits" element={<DashboardPage />} />
           <Route path="/dashboard/request-builder" element={<DashboardPage />} />
         </Route>

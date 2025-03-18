@@ -1,124 +1,121 @@
-# Project Memory
+# Personal API Dashboard - Memory File
 
 ## Current State
-- Project initialized with basic structure
-- Frontend and backend dependencies installed
-- Configuration files created
-- Landing page implemented with React Router
-- Dashboard layout implemented with placeholder sections
-- Authentication system with login and signup functionality implemented
-- Tests are excluded from production builds
+
+The project is a web application for managing API keys and monitoring API usage across various services. It consists of a frontend built with React, Vite, TypeScript, and Tailwind CSS/Shadcn UI, and a backend using FastAPI and Python.
+
+Phase 3.1-3.3 (API Key Management) has been implemented, including:
+- Frontend UI for managing API keys (ApiKeyManager component)
+- Backend endpoints for CRUD operations on API keys
+- Mock DynamoDB storage for API keys
+- Tests for the API key management functionality
+- Special handling for large API keys with a detail view modal
+- Copy-to-clipboard functionality for API keys
+
+The application is now in a working state with the following fixed issues:
+- Updated the moto import in mock_db.py to use mock_aws instead of mock_dynamodb
+- Fixed the authentication implementation in auth.py
+- Added the missing getToken function in api.ts
+- Resolved CORS issues for development environment
+- Fixed signup/login flow to handle the correct response formats
 
 ## Completed Tasks
-1. Project Structure Setup (Phase 1.1)
-   - Created directory structure
-   - Set up frontend with Vite + React + TypeScript
-   - Set up backend with FastAPI
-   - Installed all necessary dependencies
-   - Created configuration files
 
-2. Landing Page Implementation (Phase 1.2)
-   - Created LandingPage.tsx component with responsive design
-   - Implemented basic layout and styling with Tailwind CSS
-   - Added navigation buttons with React Router
-   - Created Button UI component with shadcn/ui styling
-   - Updated landing page as a personal open-source project
-   - Simplified landing page UI with a single "Get Started" button in hero section
-   - Designed footer with open source information and GitHub link
+### Project Structure
+- Set up frontend with Vite, React, TypeScript, and Tailwind CSS
+- Set up backend with FastAPI
+- Created initial project directory structure
 
-3. Project Structure Fix
-   - Fixed duplicate frontend directory issue (removed nested frontend directory inside backend)
-   - Ensured proper separation between frontend and backend directories
+### Phase 1: Landing Page
+- Created landing page with responsive design
+- Implemented navigation bar with links
+- Created Hero section with a "Get Started" button
+- Added features section highlighting key functionality
+- Added footer with open source information and GitHub link
 
-4. Dashboard Layout Implementation (Phase 1.3)
-   - Created DashboardPage.tsx component with responsive layout
-   - Implemented Sidebar component with navigation links
-   - Implemented Navbar component with user controls
-   - Added placeholder sections for:
-     - API Keys management
-     - Rate Limit monitoring
-     - API Request Builder
-   - Set up routes in App.tsx for dashboard and sub-pages
-   - Added statistics overview cards
-   - Designed empty states for each section
+### Phase 2: Dashboard & Authentication
+- Created dashboard layout with sidebar navigation
+- Implemented main dashboard view
+- Created authentication system with JWT tokens
+- Added protected routes for authenticated users
+- Implemented user signup and login forms with validation
+- Added in-memory user database for authentication
 
-5. Authentication System (Phase 2.1)
-   - Created AuthPage.tsx with login and signup forms
-   - Implemented form validation with Zod and React Hook Form
-   - Added mock JWT authentication in backend with FastAPI
-   - Created auth.ts utility for frontend authentication
-   - Implemented protected routes with ProtectedRoute component
-   - Added logout functionality to Navbar component
-   - Simplified auth to use email-only (no username)
-   - Added comprehensive tests for authentication endpoints and utilities
-   - Configured test exclusion from production builds
+### Phase 3: API Key Management
+- Created ApiKeyManager component for CRUD operations on API keys
+- Created ApiKeysPage for dedicated API key management
+- Implemented backend storage of API keys using mock DynamoDB
+- Added encryption for API keys using Fernet
+- Created API endpoints for managing API keys
+- Connected frontend with backend for API key operations
+- Added tests for API key endpoints
+- Fixed bugs in moto implementation and authentication
+- Enhanced UI with loading indicators, error handling, and confirmation dialogs
+- Added special handling for large API keys with detail view modal
+- Implemented copy-to-clipboard functionality for API keys
 
 ## Next Tasks
-1. API Key Management (Phase 3)
-   - Implement API Key Management UI
-   - Implement mock API key storage in backend
-   - Add encryption for API keys
+
+### Phase 4: API Rate Limit & Usage Tracking
+- Create UI for displaying rate limit information
+- Set up local Redis cache for storing rate limit data
+- Create backend endpoints for tracking rate limits
+- Implement middleware for rate limiting
+- Add tests for rate limiting functionality
+
+### Phase 5: API Testing Interface
+- Create a UI for testing API endpoints
+- Implement request builder and response viewer
+- Add history of API requests
+- Create backend proxy for forwarding API requests
 
 ## File Structure
+
+### Frontend
 ```
-personal-api-dashboard/
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   ├── index.css
-│   │   ├── components/
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── ProtectedRoute.tsx
-│   │   │   └── ui/
-│   │   │       └── button.tsx
-│   │   ├── lib/
-│   │   │   ├── utils.ts
-│   │   │   └── auth.ts
-│   │   ├── pages/
-│   │   │   ├── LandingPage.tsx
-│   │   │   ├── DashboardPage.tsx
-│   │   │   └── AuthPage.tsx
-│   │   ├── graphql/
-│   │   ├── hooks/
-│   │   └── utils/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tsconfig.json
-│   ├── jest.config.js
-│   ├── jest.setup.js
-│   └── tailwind.config.js
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── schemas/
-│   │   │   └── auth.py
-│   │   ├── utils/
-│   │   │   └── auth.py
-│   │   └── routers/
-│   │       └── auth.py
-│   ├── tests/
-│   │   ├── conftest.py
-│   │   ├── test_auth.py
-│   │   └── test_auth_utils.py
-│   ├── pytest.ini
-│   ├── setup.py
-│   ├── MANIFEST.in
-│   ├── requirements.txt
-│   └── .env.example
-├── .gitignore
-├── README.md
-├── build.sh
-├── .cursorrules
-├── memory.md
-└── project.md
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── ApiKeyManager.tsx
+│   │   ├── Navbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── pages/
+│   │   ├── ApiKeysPage.tsx
+│   │   ├── DashboardPage.tsx
+│   │   ├── LandingPage.tsx
+│   │   └── AuthPage.tsx
+│   ├── lib/
+│   │   ├── api.ts
+│   │   └── auth.ts
+│   ├── App.tsx
+│   └── main.tsx
+├── package.json
+└── vite.config.ts
+```
+
+### Backend
+```
+backend/
+├── app/
+│   ├── main.py
+│   ├── routers/
+│   │   ├── auth.py
+│   │   └── api_keys.py
+│   ├── schemas/
+│   │   ├── auth.py
+│   │   └── api_key.py
+│   └── utils/
+│       ├── auth.py
+│       └── mock_db.py
+├── tests/
+│   └── test_api_keys.py
+└── requirements.txt
 ```
 
 ## Notes
-- Frontend development server will run on port 5173
-- Backend API will run on port 8000
+
+- Frontend development server runs on port 5173
+- Backend API runs on port 8000
 - Using shadcn/ui for frontend components
 - Using FastAPI with Strawberry GraphQL for backend
 - Mock AWS services (Moto) and Redis for local development
@@ -141,9 +138,23 @@ personal-api-dashboard/
   - Protected routes redirect to login if not authenticated
   - Registration and login forms with validation
   - Comprehensive test suite for authentication endpoints and utilities
+- API Key Management is implemented with:
+  - Frontend component for adding, viewing, editing, and deleting API keys
+  - Backend storage using mock DynamoDB with Moto
+  - Encryption of API keys using Fernet
+  - Full CRUD operations with proper authentication
+  - API client service for interacting with the backend
+  - Form validation using Zod
+  - Loading and error states for better user experience
+  - Special handling for large API keys with detail view modal
+  - Copy-to-clipboard functionality
 - Test files are excluded from production builds:
   - Backend uses setup.py with find_packages(exclude=["tests", "tests.*"])
   - Frontend uses Vite config to exclude test files from build
   - Jest is configured for running frontend tests
   - Pytest with coverage reporting for backend tests
   - A production build script (build.sh) is available that excludes tests
+
+To run the project:
+1. Start the backend: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+2. Start the frontend: `cd frontend && npm run dev`

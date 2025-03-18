@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from .routers import auth
+from .routers import auth, api_keys
 
 # Load environment variables
 load_dotenv()
@@ -15,10 +15,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Configure CORS - More permissive for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(","),
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,6 +26,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(api_keys.router)
 
 @app.get("/")
 async def root():

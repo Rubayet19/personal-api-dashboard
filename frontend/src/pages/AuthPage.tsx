@@ -76,12 +76,9 @@ function AuthPage() {
         password: data.password
       });
       
-      // Login the user after successful signup
-      await login({
-        email: data.email,
-        password: data.password
-      });
+      console.log('Signup successful:', newUser);
       
+      // The login is now handled automatically in the signup function
       navigate('/dashboard');
     } catch (err) {
       console.error("Signup error:", err);

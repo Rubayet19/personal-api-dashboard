@@ -78,13 +78,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if email is None:
             raise credentials_exception
         token_data = TokenData(sub=email)
+        
+        # Return the token data as a dict with 'sub' field
+        # This will be used as user_id in other parts of the app
+        return {"sub": email}
     except JWTError:
         raise credentials_exception
-    
-    user = get_user(token_data.sub)
-    if user is None:
-        raise credentials_exception
-    return user
 
 
 async def create_new_user(email: str, password: str):

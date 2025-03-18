@@ -21,7 +21,7 @@ You should do task-based development. Git is already initialized in the project.
 
 There will be a memory file called memory.md 
 
-The memory file will contain the state of the project, and any notes or relevant details you'd need to remember between chats.
+The memory file will contain the state of the project, and any notes or relevant details you'd need to remember between chats. Dont remove too many stuff and keep it as detailed as possible
 
 Keep it up to date based on the project's current state. After a feature is implemented, update the memory file to reflect the current state of the project including the updated file structure. Make sure when I create a new chat you can easily know what to do based on the project.md file and the memory file and continue working from where you left off and onto the next task.
 

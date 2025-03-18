@@ -1,5 +1,7 @@
 import { Sidebar } from "../components/Sidebar";
 import { Navbar } from "../components/Navbar";
+import { ApiKeyManager } from "../components/ApiKeyManager";
+import { Link } from "react-router-dom";
 
 function DashboardPage() {
   return (
@@ -122,39 +124,29 @@ function DashboardPage() {
 
           {/* Placeholder Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* API Keys Section - Placeholder */}
+            {/* API Keys Section */}
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">API Keys</h2>
-                <button className="text-sm text-blue-600 hover:text-blue-800">
-                  Add New Key
-                </button>
+                <Link 
+                  to="/dashboard/api-keys" 
+                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  View All
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-4 w-4 ml-1" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
               
-              {/* Empty state */}
-              <div className="py-8 flex flex-col items-center justify-center text-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-gray-400 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                  />
-                </svg>
-                <p className="text-gray-600 mb-2">No API keys added yet</p>
-                <p className="text-sm text-gray-500 mb-4">
-                  Start by adding an API key to use in your requests
-                </p>
-                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  Add Your First API Key
-                </button>
-              </div>
+              {/* API Keys preview */}
+              <ApiKeyManager />
             </div>
 
             {/* Rate Limits Section - Placeholder */}
