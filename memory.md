@@ -4,20 +4,20 @@
 
 The project is a web application for managing API keys and monitoring API usage across various services. It consists of a frontend built with React, Vite, TypeScript, and Tailwind CSS/Shadcn UI, and a backend using FastAPI and Python.
 
-Phases 1-4 have been completed and all components are now working correctly. The application provides:
+Phases 1-5 have been completed, and significant progress has been made on Phase 5 (API Rate Limit & Usage Tracking). The application provides:
 - User authentication with JWT tokens
 - API key management with secure storage
 - API request building and testing interface
 - Modern UI with Shadcn UI components
+- Rate limit tracking and visualization for API keys
+- State persistence between tabs for the API Request Builder
 
-Recent fixes that were implemented:
-- Added missing `api` object export to api.ts for proper API client functionality
-- Fixed import paths in ApiRequestForm and ApiResponse components
-- Added consistent layout with Sidebar to the ApiRequestPage
-- Fixed navigation from Dashboard to API Request Builder
-- Added `get_api_key_by_id` alias function in backend's mock_db.py
-- Properly implemented Shadcn UI components with all required dependencies
-- Resolved dependency conflicts by enforcing correct package versions
+Recent improvements that were implemented:
+- Simplified rate limit functionality to only track limits when stored API keys are used
+- Added automatic removal of rate limits when associated API keys are deleted
+- Implemented visual feedback with warning and critical alerts for approaching rate limits
+- Created comprehensive unit tests for rate limit parsing and storage
+- Added state persistence for the API Request Builder when switching tabs
 
 ## Completed Tasks
 
@@ -52,7 +52,7 @@ Recent fixes that were implemented:
 - Fixed bugs in moto implementation and authentication
 - Enhanced UI with loading indicators, error handling, and confirmation dialogs
 - Added special handling for large API keys with detail view modal
-- Implemented copy-to-clipboard functionality for API keys
+- Implemented tooltip help for the Edit and Delete buttons
 
 ### Phase 4: API Request Builder & Testing
 - Created ApiRequestForm component for building API requests
@@ -83,42 +83,31 @@ Recent fixes that were implemented:
   - Proper error handling and authentication
 - Added tests for the proxy endpoint functionality
 - Added httpx to backend requirements
-- UI Component Library:
-  - Added Shadcn UI components:
-    - Button: Highly customizable button component with many variants
-    - Card: Card component with header, content, and footer sections
-    - Avatar: User avatar with image and fallback support
-    - Badge: Status badges for displaying request status
-    - Dialog: Modal dialog for confirmations and detail views
-    - Sheet: Slide-out panel for supplementary content
-    - Toast: Notification system for user feedback
-    - Alert: Contextual alert boxes for warnings or information
-    - Tabs: Tab interface for switching between content views
-    - Skeleton: Loading placeholders for content
-
-## Next Tasks
+- Implemented state persistence for the Request Builder when switching tabs
+  - Created RequestBuilderContext to store form state and API responses
+  - Updated ApiRequestForm and ApiResponse to use the shared context
+  - Added localStorage persistence to survive page refreshes
 
 ### Phase 5: API Rate Limit & Usage Tracking
-- Create UI for displaying rate limit information
-  - Design a dedicated Rate Limits page
-  - Implement visual indicators for rate limits (progress bars, gauges)
-  - Show remaining requests and reset times
-- Set up local Redis cache for storing rate limit data
-  - Install Redis and configure connection
-  - Create schema for storing rate limit information
-  - Implement cache expiration policies
-- Create backend endpoints for tracking rate limits
-  - Extract rate limit headers from API responses
-  - Store and retrieve rate limit data from Redis
-  - Implement rate limit aggregation for analytics
-- Implement middleware for rate limiting
-  - Add client-side rate limit protection
-  - Implement backend throttling if needed
-  - Add visual feedback when rate limits are approached
-- Add tests for rate limiting functionality
-  - Unit tests for rate limit parsing
-  - Integration tests for Redis caching
-  - E2E tests for rate limit display
+- Created RateLimit component for displaying rate limit information
+  - Progress bars showing used vs. total requests
+  - Time remaining until reset
+  - Visual indicators for approaching rate limits
+  - Support for multiple API services
+- Set up Redis cache for storing rate limit data
+  - Created schema for storing rate limit information
+  - Implemented expiration policies for rate limit data
+- Created backend endpoints for tracking rate limits
+  - Extracting rate limit headers from API responses
+  - Storing and retrieving rate limit data from Redis
+  - API key-based rate limit tracking
+- Added visual feedback for approaching rate limits
+  - Warning alerts when under 30% remaining
+  - Critical alerts when under 10% remaining
+- Added comprehensive unit tests for rate limit functionality
+  - Tests for parsing different API rate limit formats
+  - Tests for storing and retrieving rate limit data
+  - Tests for proper TTL handling
 
 ## File Structure
 
@@ -131,6 +120,7 @@ frontend/
 │   │   ├── ApiRequestForm.tsx
 │   │   ├── ApiResponse.tsx
 │   │   ├── Navbar.tsx
+│   │   ├── RateLimit.tsx
 │   │   ├── Sidebar.tsx
 │   │   └── ui/
 │   │       ├── alert.tsx
@@ -148,22 +138,24 @@ frontend/
 │   │       ├── textarea.tsx
 │   │       ├── toast.tsx
 │   │       └── toaster.tsx
+│   ├── contexts/
+│   │   └── RequestBuilderContext.tsx    // New context for Request Builder state persistence
 │   ├── lib/
-│   │   ├── api.ts             // Contains api client object with get/post/put/delete methods
+│   │   ├── api.ts                       // Contains api client object with get/post/put/delete methods
 │   │   ├── auth.ts
-│   │   ├── utils.ts           // Contains cn() utility for merging class names
+│   │   ├── utils.ts                     // Contains cn() utility for merging class names
 │   │   └── hooks/
-│   │       └── use-toast.ts   // Toast notification system hook
+│   │       └── use-toast.ts             // Toast notification system hook
 │   ├── pages/
 │   │   ├── ApiKeysPage.tsx
-│   │   ├── ApiTestPage.tsx    // Now includes Sidebar and Navbar for consistent layout
-│   │   ├── DashboardPage.tsx  // "Build Your First Request" button links to API Request Builder
+│   │   ├── ApiTestPage.tsx              // Now uses RequestBuilderProvider for state persistence
+│   │   ├── DashboardPage.tsx
 │   │   ├── LandingPage.tsx
 │   │   └── AuthPage.tsx
-│   ├── App.tsx                // Includes Toaster component for notifications
+│   ├── App.tsx
 │   └── main.tsx
 ├── package.json
-└── vite.config.ts             // Includes @/ alias for src/ directory
+└── vite.config.ts
 ```
 
 ### Backend
@@ -173,19 +165,24 @@ backend/
 │   ├── main.py
 │   ├── routers/
 │   │   ├── auth.py
-│   │   ├── api_keys.py
-│   │   └── proxy.py           // Proxy for forwarding API requests
+│   │   ├── api_keys.py                  // Now deletes associated rate limits when API keys are removed
+│   │   ├── proxy.py                     // Improved to only track rate limits for stored API keys
+│   │   └── rate_limits.py               // Endpoints for rate limit data
 │   ├── schemas/
 │   │   ├── auth.py
 │   │   ├── api_key.py
-│   │   └── proxy.py
-│   └── utils/
-│       ├── auth.py
-│       └── mock_db.py         // Now includes get_api_key_by_id alias function
+│   │   ├── proxy.py
+│   │   └── rate_limit.py
+│   ├── utils/
+│   │   ├── auth.py
+│   │   ├── mock_db.py
+│   │   └── redis_client.py              // Redis client for rate limit storage and retrieval
 ├── tests/
 │   ├── test_api_keys.py
-│   └── test_proxy.py
-└── requirements.txt           // Includes httpx for API requests
+│   ├── test_proxy.py
+│   └── test_rate_limits.py              // New tests for rate limit functionality
+├── pytest.ini                           // Configuration for pytest with coverage reporting
+└── requirements.txt
 ```
 
 ## Technical Implementation Details
@@ -198,22 +195,26 @@ backend/
 - Consistent error handling with Toast notifications
 - Responsive design that works on all devices
 
+#### Request Builder State Persistence
+- Using React Context API with the RequestBuilderContext provider
+- Storing form state (URL, method, headers, body) and API response in context
+- Persisting data in localStorage for session continuity
+- Allowing users to navigate between tabs without losing their work
+
+#### Rate Limit Visualization
+- Progress bars showing usage with color-coded indicators
+- Alert components for warning and critical rate limit states
+- Clear empty state with instructions when no data is available
+- Only showing rate limits for APIs with stored API keys
+
 #### API Client
-- Central `api` object with standard HTTP methods in `api.ts`:
-  ```typescript
-  export const api = {
-    get: async (endpoint: string) => { /* ... */ },
-    post: async (endpoint: string, body: any) => { /* ... */ },
-    put: async (endpoint: string, body: any) => { /* ... */ },
-    delete: async (endpoint: string) => { /* ... */ }
-  };
-  ```
+- Central `api` object with standard HTTP methods in `api.ts`
 - Automatic token inclusion for authenticated requests
 - Consistent error handling and response formatting
 
 #### State Management
 - Using React hooks with TypeScript for type safety
-- Local component state for UI interactions
+- Context API for shared state (Request Builder)
 - API communication using the api client
 - Authentication state stored in localStorage
 
@@ -234,35 +235,41 @@ backend/
 - Moto for mocking DynamoDB interactions
 - Encrypted storage of API keys using Fernet
 - Full CRUD operations with authentication checks
+- Automatic removal of associated rate limits when keys are deleted
+
+#### Rate Limit Tracking
+- Redis for storing and retrieving rate limit data
+- Tracking rate limits only when stored API keys are used
+- Automatic normalization of API names for consistency
+- Time-based expiration of rate limit data
 
 #### Proxy Service
 - Implemented with httpx for forwarding API requests
 - Support for authentication with stored API keys
-- Rate limit header parsing and forwarding
+- Rate limit header parsing and extraction
 - Error handling for various failure scenarios
 
-#### Database Structure
-- API Keys table with:
-  - id (primary key)
-  - user_id (for filtering keys by user)
-  - api_name (for identifying the API service)
-  - encrypted_key (the securely stored API key)
-  - created_at and updated_at timestamps
+#### Testing
+- Comprehensive unit tests with pytest
+- Coverage reporting for code quality
+- Tests for rate limit parsing from different API formats
 
 ## Notes
 
 - Frontend development server runs on port 5173 (or next available port if busy)
 - Backend API runs on port 8000
-- The project successfully implements all features from Phases 1-4
+- The project successfully implements all features from Phases 1-5
 - All user flows work as expected:
   - User authentication
   - API key management
   - API request building and testing
+  - Rate limit visualization
   - Navigation between dashboard sections
 - Project follows best practices:
   - DRY (Don't Repeat Yourself)
   - KISS (Keep It Simple, Stupid)
   - YAGNI (You Aren't Gonna Need It)
+  - TDD (Test-Driven Development)
   - Component-based architecture
   - Type safety with TypeScript
   - Consistent error handling
@@ -270,3 +277,6 @@ backend/
 To run the project:
 1. Start the backend: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 2. Start the frontend: `cd frontend && npm run dev`
+
+## Current Phase: 6
+

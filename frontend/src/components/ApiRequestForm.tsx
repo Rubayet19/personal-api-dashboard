@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -7,29 +7,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Label } from './ui/label';
 import { Loader2 } from 'lucide-react';
-import { Badge } from './ui/badge';
 import { api } from '../lib/api';
+import { useRequestBuilder } from '../contexts/RequestBuilderContext';
 
-interface Header {
-  key: string;
-  value: string;
-  id: string;
-}
-
-interface ApiRequestFormProps {
-  onResponseReceived?: (response: any) => void;
-}
-
-export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
-  const [url, setUrl] = useState<string>('');
-  const [method, setMethod] = useState<string>('GET');
-  const [headers, setHeaders] = useState<Header[]>([{ key: '', value: '', id: Date.now().toString() }]);
-  const [body, setBody] = useState<string>('');
+export function ApiRequestForm() {
+  const { state, setState } = useRequestBuilder();
+  const {
+    url,
+    method,
+    headers,
+    body,
+    activeTab,
+    useApiKey,
+    selectedApiKeyId
+  } = state;
+  
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('headers');
-  const [useApiKey, setUseApiKey] = useState<boolean>(false);
-  const [selectedApiKeyId, setSelectedApiKeyId] = useState<string>('');
   const [availableApiKeys, setAvailableApiKeys] = useState<any[]>([]);
   const [isLoadingKeys, setIsLoadingKeys] = useState<boolean>(false);
 
@@ -45,9 +39,9 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
         if (keys && Array.isArray(keys)) {
           setAvailableApiKeys(keys);
           console.log('Available API keys set:', keys.length);
-          // If we have keys, set the first one as selected by default
-          if (keys.length > 0) {
-            setSelectedApiKeyId(keys[0].id);
+          // If we have keys and no key is selected, set the first one as selected by default
+          if (keys.length > 0 && useApiKey && !selectedApiKeyId) {
+            setState({ selectedApiKeyId: keys[0].id });
           }
         } else {
           console.error('Unexpected API keys response format:', keys);
@@ -62,22 +56,26 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
     };
     
     fetchApiKeys();
-  }, []);
+  }, [useApiKey, selectedApiKeyId, setState]);
 
   const addHeader = () => {
-    setHeaders([...headers, { key: '', value: '', id: Date.now().toString() }]);
+    setState({ 
+      headers: [...headers, { key: '', value: '', id: Date.now().toString() }]
+    });
   };
 
   const removeHeader = (id: string) => {
-    setHeaders(headers.filter(header => header.id !== id));
+    setState({
+      headers: headers.filter(header => header.id !== id)
+    });
   };
 
   const updateHeader = (id: string, field: 'key' | 'value', value: string) => {
-    setHeaders(
-      headers.map(header =>
+    setState({
+      headers: headers.map(header =>
         header.id === id ? { ...header, [field]: value } : header
       )
-    );
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,10 +101,8 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
       console.log('Sending request with data:', requestData);
       const response = await api.post('/api/proxy', requestData);
       
-      if (onResponseReceived) {
-        // The response is directly the data we need, not wrapped in a data property
-        onResponseReceived(response);
-      }
+      // Store the response in the context
+      setState({ response });
     } catch (err: any) {
       setError(err.message || 'Failed to send request');
       console.error('API request error:', err);
@@ -143,7 +139,7 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
                 id="url"
                 placeholder="https://api.example.com/endpoint"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => setState({ url: e.target.value })}
                 required
               />
             </div>
@@ -151,7 +147,7 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
               <Label htmlFor="method">Method</Label>
               <Select
                 value={method}
-                onValueChange={(value) => setMethod(value)}
+                onValueChange={(value) => setState({ method: value })}
               >
                 <SelectTrigger id="method">
                   <SelectValue placeholder="HTTP Method" />
@@ -174,14 +170,14 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
               id="useApiKey"
               checked={useApiKey}
               onChange={(e) => {
-                setUseApiKey(e.target.checked);
+                setState({ useApiKey: e.target.checked });
                 // If unchecking, clear the selected key
                 if (!e.target.checked) {
-                  setSelectedApiKeyId('');
+                  setState({ selectedApiKeyId: '' });
                 }
                 // If checking and we have keys, select the first one by default
                 else if (availableApiKeys && availableApiKeys.length > 0 && !selectedApiKeyId) {
-                  setSelectedApiKeyId(availableApiKeys[0].id);
+                  setState({ selectedApiKeyId: availableApiKeys[0].id });
                 }
               }}
               className="h-4 w-4"
@@ -199,7 +195,7 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
                   <div className="ml-2 flex-1">
                     <Select
                       value={selectedApiKeyId}
-                      onValueChange={(value) => setSelectedApiKeyId(value)}
+                      onValueChange={(value) => setState({ selectedApiKeyId: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select API key" />
@@ -227,7 +223,10 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
             )}
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs 
+            value={activeTab} 
+            onValueChange={(tab) => setState({ activeTab: tab })}
+          >
             <TabsList>
               <TabsTrigger value="headers">Headers</TabsTrigger>
               <TabsTrigger value="body" disabled={method === 'GET' || method === 'HEAD'}>Body</TabsTrigger>
@@ -274,7 +273,7 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
               <Textarea
                 placeholder="Request body (JSON, form data, etc.)"
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
+                onChange={(e) => setState({ body: e.target.value })}
                 className="min-h-[200px] font-mono"
               />
             </TabsContent>
@@ -287,12 +286,12 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
           )}
         </form>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex gap-4">
         <Button
           type="submit"
           disabled={!isFormValid || isLoading}
           onClick={handleSubmit}
-          className="w-full"
+          className="flex-1"
         >
           {isLoading ? (
             <>
@@ -302,6 +301,24 @@ export function ApiRequestForm({ onResponseReceived }: ApiRequestFormProps) {
           ) : (
             'Send Request'
           )}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setState({
+            url: '',
+            method: 'GET',
+            headers: [{ key: '', value: '', id: Date.now().toString() }],
+            body: '',
+            useApiKey: false,
+            selectedApiKeyId: '',
+            response: null,
+            activeTab: 'headers'
+          })}
+          className="w-auto"
+        >
+          Clear Form
         </Button>
       </CardFooter>
     </Card>
