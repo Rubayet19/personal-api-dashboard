@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { Navbar } from "../components/Navbar";
 import { ApiKeyManager } from "../components/ApiKeyManager";
-import { RateLimit } from "../components/RateLimit";
 import { ApiRequestHistory } from "../components/ApiRequestHistory";
 import { Link } from "react-router-dom";
 import { api, type DashboardStats } from "../lib/api";
 import { ReloadIcon } from "@radix-ui/react-icons";
+import { useKeyUpdate } from "../contexts/KeyUpdateContext";
 
 function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { updateCounter } = useKeyUpdate();
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -27,9 +28,10 @@ function DashboardPage() {
     }
   };
 
+  // Fetch stats on initial load and when API keys are updated
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [updateCounter]); // dependency on updateCounter to refresh when keys change
 
   // Format latency in milliseconds to a readable string
   const formatLatency = (latency: number | null): string => {
@@ -166,7 +168,7 @@ function DashboardPage() {
                 {isLoading ? (
                   <span className="inline-block w-16 h-8 bg-gray-200 animate-pulse rounded"></span>
                 ) : (
-                  formatSuccessRate(stats?.success_rate)
+                  formatSuccessRate(stats ? stats.success_rate : null)
                 )}
               </p>
               <p className="text-sm text-gray-600 mt-1">
@@ -198,7 +200,7 @@ function DashboardPage() {
                 {isLoading ? (
                   <span className="inline-block w-16 h-8 bg-gray-200 animate-pulse rounded"></span>
                 ) : (
-                  formatLatency(stats?.average_latency)
+                  formatLatency(stats ? stats.average_latency : null)
                 )}
               </p>
               <p className="text-sm text-gray-600 mt-1">

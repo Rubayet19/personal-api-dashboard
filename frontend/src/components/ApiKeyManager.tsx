@@ -4,6 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Edit, Trash2, Key, Plus, Loader2, ExternalLink, Copy, Check } from "lucide-react";
 import { getApiKeys, createApiKey, updateApiKey, deleteApiKey, ApiKey } from "../lib/api";
+import { useKeyUpdate } from "../contexts/KeyUpdateContext";
 
 // Define API key schema for validation
 const apiKeySchema = z.object({
@@ -26,6 +27,7 @@ export function ApiKeyManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { triggerUpdate } = useKeyUpdate();
 
   // Form handling
   const {
@@ -93,40 +95,34 @@ export function ApiKeyManager() {
     setCopiedKey(id);
   };
 
-  // Add a new API key
+  // Create a new API key
   const handleAddKey = async (data: ApiKeyFormValues) => {
     try {
       setError(null);
-      const newKey = await createApiKey({
-        api_name: data.api_name,
-        api_key: data.api_key,
-      });
-
+      const newKey = await createApiKey(data);
       setApiKeys((prev) => [...prev, newKey]);
       setIsAddingKey(false);
       reset();
+      triggerUpdate(); // Notify dashboard about new key
     } catch (err) {
       setError("Failed to add API key");
       console.error(err);
     }
   };
 
-  // Edit an existing API key
+  // Update an API key
   const handleEditKey = async (data: ApiKeyFormValues) => {
     if (!editingKey) return;
 
     try {
       setError(null);
-      const updatedKey = await updateApiKey(editingKey, {
-        api_name: data.api_name,
-        api_key: data.api_key,
-      });
-
+      const updatedKey = await updateApiKey(editingKey, data);
       setApiKeys((prev) =>
         prev.map((key) => (key.id === editingKey ? updatedKey : key))
       );
       setEditingKey(null);
       reset();
+      triggerUpdate(); // Notify dashboard about updated key
     } catch (err) {
       setError("Failed to update API key");
       console.error(err);
@@ -152,6 +148,8 @@ export function ApiKeyManager() {
       if (viewingKeyDetail === id) {
         setViewingKeyDetail(null);
       }
+      
+      triggerUpdate(); // Notify dashboard about deleted key
     } catch (err) {
       setError("Failed to delete API key");
       console.error(err);
