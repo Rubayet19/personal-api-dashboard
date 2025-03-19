@@ -16,6 +16,49 @@ All phases of the project have been completed, with the dashboard now fully func
 - Real-time dashboard updates when API keys are changed
 - User profile dropdown with account information
 
+## AWS Migration Progress
+
+The project is currently being migrated from local development to AWS cloud services. The following AWS resources have been set up:
+
+1. **Amazon Cognito User Pool**
+   - User Pool ID: `us-east-2_0Yl5Bw4t1`
+   - App Client ID: `uqopethg05fvi7tna64hkkng7`
+   - Configured with password requirements and email verification
+
+2. **Amazon DynamoDB Table**
+   - Table Name: `api-dashboard`
+   - Partition Key: `PK`
+   - Sort Key: `SK`
+   - GSI: `GSI1` with partition key `GSI1PK` and sort key `GSI1SK`
+   - PAY_PER_REQUEST billing mode (on-demand capacity)
+
+3. **Amazon S3 Bucket**
+   - Bucket Name: `api-dashboard-frontend-166868085052`
+   - Configured for static website hosting
+   - Index document: `index.html`
+   - Error document: `index.html`
+   - Website URL: `http://api-dashboard-frontend-166868085052.s3-website-us-east-2.amazonaws.com`
+
+4. **AWS IAM Role for Lambda**
+   - Role Name: `api-dashboard-lambda-role`
+   - Role ARN: `arn:aws:iam::166868085052:role/api-dashboard-lambda-role`
+   - Attached Policies:
+     - AWSLambdaBasicExecutionRole
+     - AmazonDynamoDBFullAccess
+     - AmazonCognitoReadOnly
+
+5. **Amazon API Gateway (HTTP API)**
+   - API ID: `uyu9oyhxyk`
+   - API Name: `api-dashboard-api`
+   - Protocol Type: HTTP
+   - Endpoint: `https://uyu9oyhxyk.execute-api.us-east-2.amazonaws.com`
+
+We've successfully completed **Phase 1: AWS Resources Setup** of our AWS migration. All necessary AWS resources have been created and are ready for integration with our application code.
+
+The configuration values for AWS resources have been saved to `~/.api-dashboard/aws-config.env` for use in deployment scripts. All AWS resources have been created in the `us-east-2` (Ohio) region and are within AWS Free Tier limits, ensuring minimal to no costs for personal usage.
+
+The project is now ready to proceed with **Phase 2: Backend Code Integration** as outlined in the AWS deployment guide (`docs/aws-deployment.md`). Future migration tasks are detailed in the deployment guide with step-by-step instructions for each phase.
+
 Recent improvements that were implemented:
 - Added dashboard statistics functionality with dynamic data fetching
 - Implemented API request logging to track calls, success rates, and latency
