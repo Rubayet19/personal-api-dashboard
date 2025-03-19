@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Edit, Trash2, Key, Plus, Loader2, ExternalLink, Copy, Check } from "lucide-react";
 import { getApiKeys, createApiKey, updateApiKey, deleteApiKey, ApiKey } from "../lib/api";
 import { useKeyUpdate } from "../contexts/KeyUpdateContext";
+import { isFreshLogin } from "../lib/auth";
 
 // Define API key schema for validation
 const apiKeySchema = z.object({
@@ -24,10 +25,10 @@ export function ApiKeyManager() {
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({});
   const [viewingKeyDetail, setViewingKeyDetail] = useState<string | null>(null);
   const [isAddingKey, setIsAddingKey] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const { triggerUpdate } = useKeyUpdate();
+  const [retryCount, setRetryCount] = useState(0); // Track retry attempts
+  const { triggerUpdate, setKeysLoading, keysLoading: isLoading, setHasLoadedKeys } = useKeyUpdate();
 
   // Form handling
   const {
@@ -47,20 +48,41 @@ export function ApiKeyManager() {
   useEffect(() => {
     const fetchApiKeys = async () => {
       try {
-        setIsLoading(true);
+        setKeysLoading(true);
         setError(null);
         const keys = await getApiKeys();
         setApiKeys(keys);
+        setRetryCount(0); // Reset retry count on success
+        setKeysLoading(false); // Use shared loading state
+        setHasLoadedKeys(true); // Mark that we've loaded keys at least once
       } catch (err) {
-        setError("Failed to load API keys");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+        console.error("Failed to load API keys, attempt:", retryCount + 1, err);
+        
+        // Don't show errors on first attempts or right after login
+        const freshLogin = isFreshLogin();
+        if (retryCount >= 2 && !freshLogin) {
+          setError("Failed to load API keys");
+          setKeysLoading(false); // Set loading to false when showing an error
+        } else {
+          // Retry with exponential backoff
+          const delay = Math.pow(2, retryCount) * 300; // 300ms, 600ms, 1200ms, etc.
+          
+          // Add extra delay if it's a fresh login
+          const loginDelay = freshLogin ? 700 : 0;
+          
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            // Trigger a re-fetch by re-running the effect
+            // We do this via a state change (retryCount)
+          }, delay + loginDelay);
+          
+          // Keep isLoading true since we're going to retry
+        }
       }
     };
 
     fetchApiKeys();
-  }, []);
+  }, [retryCount, setKeysLoading, setHasLoadedKeys]);
 
   // Reset copied state after 2 seconds
   useEffect(() => {
@@ -351,7 +373,14 @@ export function ApiKeyManager() {
       {isLoading && (
         <div className="py-8 flex flex-col items-center justify-center text-center">
           <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-4" />
-          <p className="text-gray-600">Loading API keys...</p>
+          <p className="text-gray-600">
+            {retryCount > 0 ? 'Attempting to connect... ' + retryCount : 'Loading API keys...'}
+          </p>
+          {retryCount > 0 && (
+            <p className="text-sm text-gray-500 mt-2">
+              This might take a moment after login
+            </p>
+          )}
         </div>
       )}
 

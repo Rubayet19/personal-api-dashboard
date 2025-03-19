@@ -6,15 +6,16 @@ import { Navbar } from "../components/Navbar";
 import { ApiKeyManager } from "../components/ApiKeyManager";
 import { ApiRequestHistory } from "../components/ApiRequestHistory";
 import { Link } from "react-router-dom";
-import { api, type DashboardStats, type RateLimit } from "../lib/api";
+import { api, type DashboardStats } from "../lib/api";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useKeyUpdate } from "../contexts/KeyUpdateContext";
+import { isFreshLogin } from "../lib/auth";
 
 function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [statsLoading, setStatsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { updateCounter } = useKeyUpdate();
+  const { updateCounter, keysLoading, hasLoadedKeys } = useKeyUpdate();
   
   // Setup intersection observer for scroll-based animations
   const [statsRef, statsInView] = useInView({
@@ -26,6 +27,9 @@ function DashboardPage() {
     triggerOnce: true,
     threshold: 0.1,
   });
+
+  // Track if this is the first load attempt
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   // Animation variants for staggered animations
   const containerVariants = {
@@ -49,23 +53,43 @@ function DashboardPage() {
   };
 
   const fetchStats = async () => {
-    setIsLoading(true);
+    setStatsLoading(true);
     setError(null);
     try {
       const dashboardStats = await api.getDashboardStats();
       setStats(dashboardStats);
     } catch (err) {
       console.error("Failed to fetch dashboard stats:", err);
-      setError("Failed to load dashboard statistics");
+      // Only show error if it's not the first load attempt
+      // and not right after login
+      if (!isFirstLoad && !isFreshLogin()) {
+        setError("Failed to load dashboard statistics");
+      }
     } finally {
-      setIsLoading(false);
+      setStatsLoading(false);
+      setIsFirstLoad(false); // Mark first load as complete
     }
   };
 
   // Fetch stats on initial load and when API keys are updated
   useEffect(() => {
-    fetchStats();
-  }, [updateCounter]); // dependency on updateCounter to refresh when keys change
+    // Wait for API keys to load first, then fetch stats
+    if (isFirstLoad) {
+      // Don't try to fetch stats until keys have been loaded at least once
+      // or we've completed several retry attempts
+      if (hasLoadedKeys || !keysLoading) {
+        const timer = setTimeout(() => {
+          fetchStats();
+        }, 300); // Small delay to ensure everything is ready
+        return () => clearTimeout(timer);
+      }
+    } else {
+      fetchStats();
+    }
+  }, [updateCounter, isFirstLoad, hasLoadedKeys, keysLoading]);
+
+  // Determine if the full dashboard is in a loading state
+  const isLoading = statsLoading || (keysLoading && isFirstLoad);
 
   // Format latency in milliseconds to a readable string
   const formatLatency = (latency: number | null): string => {
@@ -79,18 +103,6 @@ function DashboardPage() {
   const formatSuccessRate = (rate: number | null): string => {
     if (rate === null) return "--";
     return `${rate.toFixed(2)}%`;
-  };
-
-  // Convert rate_limits record to array for rendering
-  const getRateLimitsArray = (): { api_name: string; limit: number; remaining: number; percentage: number }[] => {
-    if (!stats || !stats.rate_limits) return [];
-    
-    return Object.entries(stats.rate_limits).map(([api_name, data]) => ({
-      api_name,
-      limit: data.limit,
-      remaining: data.remaining,
-      percentage: data.percentage
-    }));
   };
 
   return (
@@ -140,7 +152,7 @@ function DashboardPage() {
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               <ReloadIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isLoading ? 'Refreshing...' : 'Refresh Stats'}</span>
+              <span>{isLoading ? (keysLoading ? 'Loading Keys...' : 'Refreshing...') : 'Refresh Stats'}</span>
             </motion.button>
           </motion.div>
 
@@ -154,6 +166,12 @@ function DashboardPage() {
                 transition={{ duration: 0.3 }}
               >
                 {error}
+                <button 
+                  onClick={fetchStats}
+                  className="ml-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                >
+                  Try Again
+                </button>
               </motion.div>
             )}
           </AnimatePresence>

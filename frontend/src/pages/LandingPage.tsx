@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Button } from "../components/ui/button";
@@ -172,88 +171,225 @@ function LandingPage() {
                 animate="visible"
               >
                 <motion.div 
-                  className="bg-gray-100 p-8 rounded-xl border border-gray-200 relative overflow-hidden"
+                  className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 relative overflow-hidden shadow-lg"
                   whileHover={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Background gradient animation */}
+                  {/* Animated background elements */}
                   <motion.div 
-                    className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-70"
+                    className="absolute top-0 right-0 w-32 h-32 bg-blue-400 rounded-full filter blur-3xl opacity-10"
                     animate={{ 
-                      backgroundPosition: ["0% 0%", "100% 100%"],
+                      x: [0, 10, 0],
+                      y: [0, -10, 0],
                     }}
                     transition={{ 
-                      duration: 15, 
-                      ease: "linear", 
-                      repeat: Infinity, 
+                      duration: 8, 
+                      ease: "easeInOut", 
+                      repeat: Infinity,
                       repeatType: "reverse" 
                     }}
-                    style={{ backgroundSize: "200% 200%" }}
                   />
                   
-                  <div className="relative space-y-6">
-                    <div className="space-y-2">
-                      <motion.div 
-                        className="h-4 w-32 bg-gray-300 rounded"
-                        initial={{ width: 0 }}
-                        animate={{ width: "8rem" }}
-                        transition={{ delay: 0.8, duration: 0.5 }}
-                      />
-                      <motion.div 
-                        className="h-10 bg-white border border-gray-300 rounded-md"
-                        initial={{ width: "40%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ delay: 1, duration: 0.5 }}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <motion.div 
-                        className="h-4 w-24 bg-gray-300 rounded"
-                        initial={{ width: 0 }}
-                        animate={{ width: "6rem" }}
-                        transition={{ delay: 1.2, duration: 0.5 }}
-                      />
-                      <motion.div 
-                        className="h-10 bg-white border border-gray-300 rounded-md"
-                        initial={{ width: "40%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ delay: 1.4, duration: 0.5 }}
-                      />
-                    </div>
+                  <motion.div 
+                    className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400 rounded-full filter blur-3xl opacity-10"
+                    animate={{ 
+                      x: [0, -10, 0],
+                      y: [0, 10, 0],
+                    }}
+                    transition={{ 
+                      duration: 7, 
+                      ease: "easeInOut", 
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      delay: 1
+                    }}
+                  />
+                  
+                  {/* Dashboard UI Mockup */}
+                  <div className="relative">
+                    {/* Dashboard Header */}
                     <motion.div 
-                      className="flex justify-end"
+                      className="bg-white rounded-t-lg border border-gray-200 p-4 flex items-center justify-between"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 1.6, duration: 0.5 }}
+                      transition={{ delay: 0.5, duration: 0.5 }}
                     >
-                      <div className="h-10 w-24 bg-blue-600 rounded-md" />
-                    </motion.div>
-                    <motion.div 
-                      className="h-40 bg-white border border-gray-300 rounded-md p-4"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.8, duration: 0.5 }}
-                    >
-                      <div className="space-y-2">
-                        <motion.div 
-                          className="h-4 w-full bg-gray-100 rounded"
-                          initial={{ width: "20%" }}
-                          animate={{ width: "100%" }}
-                          transition={{ delay: 2, duration: 0.8 }}
-                        />
-                        <motion.div 
-                          className="h-4 w-3/4 bg-gray-100 rounded"
-                          initial={{ width: "20%" }}
-                          animate={{ width: "75%" }}
-                          transition={{ delay: 2.2, duration: 0.8 }}
-                        />
-                        <motion.div 
-                          className="h-4 w-2/3 bg-gray-100 rounded"
-                          initial={{ width: "20%" }}
-                          animate={{ width: "66%" }}
-                          transition={{ delay: 2.4, duration: 0.8 }}
-                        />
+                      <div className="flex items-center space-x-2">
+                        <div className="h-6 w-6 rounded bg-blue-500"></div>
+                        <div className="h-4 w-24 bg-gray-200 rounded"></div>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="h-4 w-4 rounded-full bg-gray-200"></div>
+                        <div className="h-4 w-4 rounded-full bg-gray-200"></div>
+                        <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+                      </div>
+                    </motion.div>
+                    
+                    {/* Dashboard Stats Grid */}
+                    <motion.div 
+                      className="grid grid-cols-2 gap-3 bg-gray-50 p-4 border-l border-r border-gray-200"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7, duration: 0.5 }}
+                    >
+                      <motion.div 
+                        className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.9, type: "spring" }}
+                      >
+                        <div className="text-xs text-gray-500 uppercase mb-1">API Keys</div>
+                        <motion.div 
+                          className="text-2xl font-bold text-gray-800"
+                          animate={{ 
+                            scale: [1, 1.05, 1],
+                          }}
+                          transition={{ 
+                            duration: 2,
+                            times: [0, 0.5, 1],
+                            repeat: Infinity,
+                            repeatDelay: 4
+                          }}
+                        >
+                          5
+                        </motion.div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 1.1, type: "spring" }}
+                      >
+                        <div className="text-xs text-gray-500 uppercase mb-1">API Calls</div>
+                        <motion.div 
+                          className="text-2xl font-bold text-gray-800"
+                          animate={{ 
+                            scale: [1, 1.05, 1],
+                          }}
+                          transition={{ 
+                            duration: 2,
+                            times: [0, 0.5, 1],
+                            repeat: Infinity,
+                            repeatDelay: 5,
+                            delay: 0.5
+                          }}
+                        >
+                          324
+                        </motion.div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 1.3, type: "spring" }}
+                      >
+                        <div className="text-xs text-gray-500 uppercase mb-1">Success Rate</div>
+                        <div className="text-2xl font-bold text-gray-800">99.2%</div>
+                        <motion.div className="h-1 w-full bg-gray-100 rounded-full mt-1 overflow-hidden">
+                          <motion.div 
+                            className="h-full bg-green-500 rounded-full" 
+                            initial={{ width: 0 }}
+                            animate={{ width: "99.2%" }}
+                            transition={{ delay: 2, duration: 1 }}
+                          />
+                        </motion.div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 1.5, type: "spring" }}
+                      >
+                        <div className="text-xs text-gray-500 uppercase mb-1">Latency</div>
+                        <div className="text-2xl font-bold text-gray-800">125ms</div>
+                        <motion.div className="h-1 w-full bg-gray-100 rounded-full mt-1 overflow-hidden">
+                          <motion.div 
+                            className="h-full bg-blue-500 rounded-full" 
+                            initial={{ width: 0 }}
+                            animate={{ width: "25%" }}
+                            transition={{ delay: 2, duration: 1 }}
+                          />
+                        </motion.div>
+                      </motion.div>
+                    </motion.div>
+                    
+                    {/* Rate Limit Section */}
+                    <motion.div 
+                      className="bg-white p-4 rounded-b-lg border-l border-r border-b border-gray-200"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.7, duration: 0.5 }}
+                    >
+                      <div className="mb-2 flex justify-between items-center">
+                        <div className="text-sm font-medium text-gray-700">Rate Limits</div>
+                        <div className="text-xs text-gray-500 px-2 py-1">
+                          Last updated: Just now
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <div className="text-gray-600">GitHub API</div>
+                            <div className="text-gray-500">4,500/5,000</div>
+                          </div>
+                          <motion.div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <motion.div 
+                              className="h-full bg-green-400 rounded-full" 
+                              initial={{ width: 0 }}
+                              animate={{ width: "90%" }}
+                              transition={{ delay: 2.2, duration: 1.5 }}
+                            />
+                          </motion.div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <div className="text-gray-600">OpenAI API</div>
+                            <div className="text-gray-500">182/200</div>
+                          </div>
+                          <motion.div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <motion.div 
+                              className="h-full bg-yellow-400 rounded-full" 
+                              initial={{ width: 0 }}
+                              animate={{ width: "91%" }}
+                              transition={{ delay: 2.4, duration: 1.5 }}
+                            />
+                          </motion.div>
+                        </div>
+                      </div>
+                      
+                      {/* Illustrated visualization indicator - not a button */}
+                      <motion.div 
+                        className="mt-4 flex items-center justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 2.6 }}
+                      >
+                        <div className="text-xs text-gray-500 italic">
+                          Interactive visualization - not an actual application
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                    
+                    {/* Code elements floating in the background */}
+                    <motion.div 
+                      className="absolute -top-3 -right-3 text-xs font-mono text-blue-700 opacity-20 select-none"
+                      animate={{ y: [0, -10, 0], opacity: [0.2, 0.3, 0.2] }}
+                      transition={{ duration: 5, repeat: Infinity }}
+                    >
+                      {`{ "data": "visualization" }`}
+                    </motion.div>
+                    
+                    <motion.div 
+                      className="absolute -bottom-3 -left-3 text-xs font-mono text-indigo-700 opacity-20 select-none"
+                      animate={{ y: [0, 10, 0], opacity: [0.2, 0.3, 0.2] }}
+                      transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+                    >
+                      {`GET /api/stats`}
                     </motion.div>
                   </div>
                 </motion.div>
