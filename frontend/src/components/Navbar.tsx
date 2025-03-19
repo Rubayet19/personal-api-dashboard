@@ -1,14 +1,40 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { logout } from "../lib/auth";
+import { logout, getCurrentUser } from "../lib/auth";
+import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { User, Settings, LogOut } from "lucide-react";
 
 export function Navbar() {
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string>("user@example.com");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    // Fetch user info when component mounts
+    const fetchUserInfo = async () => {
+      const user = await getCurrentUser();
+      if (user && user.email) {
+        setUserEmail(user.email);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
+
+  const firstLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "U";
 
   return (
     <header className="bg-white border-b border-gray-200 py-3">
@@ -59,26 +85,52 @@ export function Navbar() {
         {/* User menu */}
         <div className="flex items-center space-x-4">
           {/* User dropdown */}
-          <div className="relative">
-            <button className="flex items-center space-x-1 focus:outline-none">
-              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
-                U
-              </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-500"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+          <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center space-x-1 focus:outline-none">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
+                  {firstLetter}
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>My Account</span>
+                  <span className="text-xs text-gray-500 font-normal">{userEmail}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer md:hidden" 
+                onClick={handleLogout}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            {/* Dropdown menu would go here */}
-          </div>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Logout Button on larger screens */}
           <div className="hidden md:block">

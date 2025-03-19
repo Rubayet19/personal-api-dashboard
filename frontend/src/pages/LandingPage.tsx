@@ -1,7 +1,22 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { AuthModal } from "../components/AuthModal";
 
 function LandingPage() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
+
+  const openLoginModal = () => {
+    setAuthModalMode('login');
+    setIsAuthModalOpen(true);
+  };
+
+  const openSignupModal = () => {
+    setAuthModalMode('signup');
+    setIsAuthModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
@@ -25,12 +40,12 @@ function LandingPage() {
             <h1 className="text-2xl font-bold text-gray-900">API Dashboard</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Link to="/login">
-              <Button variant="outline">Log in</Button>
-            </Link>
-            <Link to="/signup">
-              <Button>Sign up</Button>
-            </Link>
+            <Button variant="outline" onClick={openLoginModal}>
+              Log in
+            </Button>
+            <Button onClick={openSignupModal}>
+              Sign up
+            </Button>
           </div>
         </div>
       </header>
@@ -49,9 +64,9 @@ function LandingPage() {
                   endpoints, and monitoring rate limits.
                 </p>
                 <div>
-                  <Link to="/dashboard">
-                    <Button size="lg">Get Started</Button>
-                  </Link>
+                  <Button size="lg" onClick={openSignupModal}>
+                    Get Started
+                  </Button>
                 </div>
               </div>
               <div className="lg:w-1/2 mt-8 lg:mt-0">
@@ -187,6 +202,13 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onOpenChange={setIsAuthModalOpen}
+        defaultMode={authModalMode}
+      />
     </div>
   );
 }

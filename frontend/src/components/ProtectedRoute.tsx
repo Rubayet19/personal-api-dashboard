@@ -6,8 +6,8 @@ function ProtectedRoute() {
   const isUserAuthenticated = isAuthenticated();
 
   if (!isUserAuthenticated) {
-    // Redirect to login page but save the location they were trying to access
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to home page but save the location they were trying to access
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // Render child routes
