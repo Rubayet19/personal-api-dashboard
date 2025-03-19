@@ -34,32 +34,27 @@ export function Navbar() {
         {/* Dashboard Title - Only visible on mobile */}
         <h1 className="text-lg font-semibold md:hidden">API Dashboard</h1>
 
-        {/* Search */}
-        <div className="hidden md:flex items-center flex-1 max-w-md mx-auto">
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Search endpoints, keys, etc."
+        {/* Dashboard Title - Visible on desktop */}
+        <div className="hidden md:flex items-center space-x-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7 text-blue-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
             />
-          </div>
+          </svg>
+          <h1 className="text-xl font-bold text-gray-900">API Dashboard</h1>
         </div>
+
+        {/* Spacer */}
+        <div className="flex-1 md:flex-none md:mx-8"></div>
 
         {/* User menu */}
         <div className="flex items-center space-x-4">
