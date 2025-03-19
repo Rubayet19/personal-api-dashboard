@@ -156,51 +156,34 @@ Recent improvements that were implemented:
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── ApiKeyManager.tsx         // Main API key management container (refactored)
-│   │   ├── ApiKeyForm.tsx            // Component for adding/editing API keys
-│   │   ├── ApiKeyItem.tsx            // Component for displaying a single API key
-│   │   ├── ApiKeyList.tsx            // Component for rendering a list of API keys
-│   │   ├── ApiKeyDetail.tsx          // Component for viewing API key details
-│   │   ├── ApiKeyDeleteDialog.tsx    // Confirmation dialog for deleting API keys
-│   │   ├── ApiMiniBuilder.tsx        // Simplified for API testing without history
-│   │   ├── ApiRequestHistory.tsx     // Standalone component for request history
-│   │   ├── ApiRequestForm.tsx        // Advanced API request building form
-│   │   ├── ApiResponse.tsx           // API response display component
-│   │   ├── Navbar.tsx                // Application navigation bar
-│   │   ├── RateLimit.tsx             // Rate limit visualization component
-│   │   ├── Sidebar.tsx               // Application sidebar navigation
-│   │   ├── ProtectedRoute.tsx        // Auth protection for routes
-│   │   └── ui/                       // Reusable UI components
-│   │       ├── badge.tsx             // Status and method badges
-│   │       ├── button.tsx            // Button component
-│   │       ├── card.tsx              // Card container component
-│   │       ├── input.tsx             // Input field component
-│   │       ├── label.tsx             // Form label component
-│   │       ├── select.tsx            // Select dropdown component
-│   │       ├── tabs.tsx              // Tab navigation component
-│   │       ├── textarea.tsx          // Text area component
-│   │       ├── toast.tsx             // Toast notification component
-│   │       ├── toaster.tsx           // Toast manager component
-│   │       ├── alert.tsx             // Alert component
-│   │       └── skeleton.tsx          // Loading skeleton component
+│   │   ├── ApiKeyManager.tsx
+│   │   ├── ApiMiniBuilder.tsx         // Used in the dedicated request builder page
+│   │   ├── ApiRequestHistory.tsx      // Standalone component for displaying request history
+│   │   ├── ApiRequestForm.tsx
+│   │   ├── ApiResponse.tsx
+│   │   ├── Navbar.tsx                 // Updated to remove notification bell
+│   │   ├── RateLimit.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── ui/
+│   │       ├── badge.tsx              // Used for method and status badges
+│   │       ├── card.tsx               // Used for request history display
+│   │       └── [other shadcn components]
 │   ├── contexts/
-│   │   └── RequestBuilderContext.tsx // Context for request builder state
+│   │   └── RequestBuilderContext.tsx  // Context for Request Builder state persistence
 │   ├── lib/
-│   │   ├── api.ts                    // API client with request history
-│   │   ├── auth.ts                   // Authentication utilities
-│   │   ├── utils.ts                  // Utility functions
+│   │   ├── api.ts                     // Updated with request history endpoint
+│   │   ├── auth.ts
+│   │   ├── utils.ts                   // Contains cn() utility for merging class names
 │   │   └── hooks/
-│   │       └── use-toast.ts          // Toast hook for notifications
+│   │       └── use-toast.ts           // Toast notification system hook
 │   ├── pages/
-│   │   ├── ApiKeysPage.tsx           // API keys management page
-│   │   ├── ApiTestPage.tsx           // Full API request builder page
-│   │   ├── DashboardPage.tsx         // Main dashboard with request history
-│   │   ├── LandingPage.tsx           // Public landing page
-│   │   └── AuthPage.tsx              // Login/signup page
-│   ├── index.css                     // Base styles
-│   ├── vite-env.d.ts                 // TypeScript environment
-│   ├── App.tsx                       // Application routes
-│   └── main.tsx                      // Application entry point
+│   │   ├── ApiKeysPage.tsx
+│   │   ├── ApiTestPage.tsx            // Uses RequestBuilderProvider for state persistence
+│   │   ├── DashboardPage.tsx          // Updated with ApiRequestHistory component
+│   │   ├── LandingPage.tsx
+│   │   └── AuthPage.tsx
+│   ├── App.tsx
+│   └── main.tsx
 ├── package.json
 └── vite.config.ts
 ```
@@ -234,29 +217,6 @@ backend/
 └── requirements.txt
 ```
 
-### Completed Cleanup Tasks
-- Removed empty/unused directories: `providers`, `mocks`, `services`, `context`, `assets`
-- Removed unused UI components: `sheet.tsx`, `avatar.tsx`, `dialog.tsx`
-- Removed redundant CSS file: `App.css` (using Tailwind)
-- Removed unused react.svg from assets (project doesn't use it)
-- Removed unused API functions: `getApiKey()` and `getRateLimit()`
-- Simplified ApiMiniBuilder by removing ApiRequestHistory dependency
-- Updated ApiRequestHistory to be a standalone component
-- Applied KISS principle to reduce code duplication
-- Maintained DRY principles by removing redundant functionality
-- Ensured consistent API interfaces by keeping both object methods and standalone functions
-- Refactored ApiKeyManager into smaller components following the component size limit guideline:
-  - Created ApiKeyForm component for add/edit functionality
-  - Created ApiKeyItem component for displaying individual API keys
-  - Created ApiKeyList component for rendering the list of API keys
-  - Created ApiKeyDetail component for viewing detailed API key information
-  - Created ApiKeyDeleteDialog component for confirmation dialogs
-  - Reduced ApiKeyManager from 471 lines to under 200 lines
-- Fixed project structure issues:
-  - Removed redundant backend/ directory inside frontend/
-  - Removed incorrect @/ directory inside frontend/
-  - Standardized import paths using @/ alias for UI components
-
 ## Technical Implementation Details
 
 ### Frontend
@@ -266,10 +226,6 @@ backend/
 - Using shadcn/ui components based on Radix UI primitives
 - Consistent error handling with Toast notifications
 - Responsive design that works on all devices
-- Decomposed large components into smaller, focused ones:
-  - The API key management functionality is now split across multiple components
-  - Each component handles a specific responsibility (display, form, deletion, etc.)
-  - This improves maintainability and readability of the codebase
 
 #### Request Builder State Persistence
 - Using React Context API with the RequestBuilderContext provider

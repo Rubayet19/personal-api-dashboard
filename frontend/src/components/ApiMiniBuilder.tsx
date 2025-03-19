@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../lib/hooks/use-toast';
+import { ApiRequestHistory } from './ApiRequestHistory';
 
 export function ApiMiniBuilder() {
   const navigate = useNavigate();
@@ -93,68 +94,75 @@ export function ApiMiniBuilder() {
   const isFormValid = url.trim() !== '' && isValidUrl(url);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-3/4">
-          <Label htmlFor="mini-url">URL</Label>
-          <Input
-            id="mini-url"
-            placeholder="https://api.example.com/endpoint"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-3/4">
+            <Label htmlFor="mini-url">URL</Label>
+            <Input
+              id="mini-url"
+              placeholder="https://api.example.com/endpoint"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
+          <div className="w-full md:w-1/4">
+            <Label htmlFor="mini-method">Method</Label>
+            <Select
+              value={method}
+              onValueChange={setMethod}
+            >
+              <SelectTrigger id="mini-method">
+                <SelectValue placeholder="Method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="GET">GET</SelectItem>
+                <SelectItem value="POST">POST</SelectItem>
+                <SelectItem value="PUT">PUT</SelectItem>
+                <SelectItem value="DELETE">DELETE</SelectItem>
+                <SelectItem value="PATCH">PATCH</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="w-full md:w-1/4">
-          <Label htmlFor="mini-method">Method</Label>
-          <Select
-            value={method}
-            onValueChange={setMethod}
+
+        <div className="flex flex-wrap gap-3 pt-2">
+          <Button 
+            variant="default" 
+            disabled={!isFormValid || isLoading}
+            onClick={handleQuickTest}
+            className="flex-1"
           >
-            <SelectTrigger id="mini-method">
-              <SelectValue placeholder="Method" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="GET">GET</SelectItem>
-              <SelectItem value="POST">POST</SelectItem>
-              <SelectItem value="PUT">PUT</SelectItem>
-              <SelectItem value="DELETE">DELETE</SelectItem>
-              <SelectItem value="PATCH">PATCH</SelectItem>
-            </SelectContent>
-          </Select>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              'Quick Test'
+            )}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleGoToBuilder}
+            className="flex-1"
+          >
+            Full Request Builder
+          </Button>
+        </div>
+
+        <div className="text-sm text-gray-500 mt-2">
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Use Quick Test for simple GET requests</li>
+            <li>Use Full Builder for advanced options (headers, body, API keys)</li>
+            <li>All requests are securely proxied through our backend</li>
+          </ul>
         </div>
       </div>
-
-      <div className="flex flex-wrap gap-3 pt-2">
-        <Button 
-          variant="default" 
-          disabled={!isFormValid || isLoading}
-          onClick={handleQuickTest}
-          className="flex-1"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Testing...
-            </>
-          ) : (
-            'Quick Test'
-          )}
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={handleGoToBuilder}
-          className="flex-1"
-        >
-          Full Request Builder
-        </Button>
-      </div>
-
-      <div className="text-sm text-gray-500 mt-2">
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Use Quick Test for simple GET requests</li>
-          <li>Use Full Builder for advanced options (headers, body, API keys)</li>
-          <li>All requests are securely proxied through our backend</li>
-        </ul>
+      
+      {/* Request History */}
+      <div className="mt-8">
+        <ApiRequestHistory />
       </div>
     </div>
   );
