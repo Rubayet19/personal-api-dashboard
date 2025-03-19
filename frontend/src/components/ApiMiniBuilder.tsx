@@ -9,6 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../lib/hooks/use-toast';
 import { ApiRequestHistory } from './ApiRequestHistory';
 
+// Define response type for API proxy response
+interface ProxyResponse {
+  status_code: number;
+  time_taken: number;
+  headers: Record<string, string>;
+  body: unknown;
+}
+
 export function ApiMiniBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -49,7 +57,7 @@ export function ApiMiniBuilder() {
         method,
         headers: {},
         body: undefined
-      });
+      }) as ProxyResponse;
       
       // Show success toast
       toast({
@@ -71,10 +79,11 @@ export function ApiMiniBuilder() {
       };
       localStorage.setItem('requestBuilderState', JSON.stringify(initialState));
       navigate('/dashboard/request-builder');
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to complete the request";
       toast({
         title: "Request Failed",
-        description: error.message || "Failed to complete the request",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -82,11 +91,13 @@ export function ApiMiniBuilder() {
     }
   };
 
-  const isValidUrl = (url: string) => {
+  const isValidUrl = (url: string): boolean => {
+    if (!url || url.trim() === '') return false;
+    
     try {
       new URL(url);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   };

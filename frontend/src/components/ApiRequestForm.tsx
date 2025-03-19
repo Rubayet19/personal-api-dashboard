@@ -8,7 +8,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Label } from './ui/label';
 import { Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
-import { useRequestBuilder } from '../contexts/RequestBuilderContext';
+import { useRequestBuilder } from '../contexts/use-request-builder';
+
+// Define API key interface
+interface ApiKey {
+  id: string;
+  api_name: string;
+  api_key: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Define types for API request
+interface ApiRequestPayload {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: unknown;
+  api_key_id?: string;
+}
 
 export function ApiRequestForm() {
   const { state, setState } = useRequestBuilder();
@@ -24,7 +42,7 @@ export function ApiRequestForm() {
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [availableApiKeys, setAvailableApiKeys] = useState<any[]>([]);
+  const [availableApiKeys, setAvailableApiKeys] = useState<ApiKey[]>([]);
   const [isLoadingKeys, setIsLoadingKeys] = useState<boolean>(false);
 
   // Fetch available API keys on component mount
@@ -78,7 +96,7 @@ export function ApiRequestForm() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -86,11 +104,11 @@ export function ApiRequestForm() {
     // Filter out empty headers
     const validHeaders = headers
       .filter(h => h.key.trim() !== '' && h.value.trim() !== '')
-      .reduce((acc, h) => ({ ...acc, [h.key]: h.value }), {});
+      .reduce((acc, h) => ({ ...acc, [h.key]: h.value }), {} as Record<string, string>);
 
     try {
       // Only include api_key_id if checkbox is checked AND a key is actually selected
-      const requestData = {
+      const requestData: ApiRequestPayload = {
         url,
         method,
         headers: validHeaders,
@@ -103,19 +121,22 @@ export function ApiRequestForm() {
       
       // Store the response in the context
       setState({ response });
-    } catch (err: any) {
-      setError(err.message || 'Failed to send request');
-      console.error('API request error:', err);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send request';
+      setError(errorMessage);
+      console.error('API request error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isValidUrl = (url: string) => {
+  const isValidUrl = (url: string): boolean => {
+    if (!url || url.trim() === '') return false;
+    
     try {
       new URL(url);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   };
@@ -233,7 +254,7 @@ export function ApiRequestForm() {
             </TabsList>
             
             <TabsContent value="headers" className="space-y-4 mt-4">
-              {headers.map((header, index) => (
+              {headers.map((header) => (
                 <div key={header.id} className="flex gap-2 items-start">
                   <Input
                     placeholder="Header name"

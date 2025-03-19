@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api, type RequestLog } from '../lib/api';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '../lib/hooks/use-toast';
+
+// Define badge variant types
+type MethodBadgeVariant = 'default' | 'outline' | 'secondary' | 'destructive' | 'warning';
+type StatusBadgeVariant = 'success' | 'warning' | 'destructive' | 'default';
 
 export function ApiRequestHistory() {
   const [requestLogs, setRequestLogs] = useState<RequestLog[]>([]);
@@ -10,11 +14,7 @@ export function ApiRequestHistory() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchRequestLogs();
-  }, []);
-
-  const fetchRequestLogs = async () => {
+  const fetchRequestLogs = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -31,31 +31,35 @@ export function ApiRequestHistory() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchRequestLogs();
+  }, [fetchRequestLogs]);
 
   // Format the timestamp to a readable format
-  const formatTime = (timestamp: string) => {
+  const formatTime = (timestamp: string): string => {
     const date = new Date(timestamp);
     return date.toLocaleString();
   };
 
   // Get badge color based on status code
-  const getStatusBadgeVariant = (statusCode: number) => {
+  const getStatusBadgeVariant = (statusCode: number): StatusBadgeVariant => {
     if (statusCode < 300) return 'success';
     if (statusCode < 400) return 'warning';
     return 'destructive';
   };
 
   // Get badge text for HTTP methods
-  const getMethodBadge = (method: string) => {
-    const variants = {
+  const getMethodBadge = (method: string): MethodBadgeVariant => {
+    const variants: Record<string, MethodBadgeVariant> = {
       GET: 'default',
       POST: 'outline',
       PUT: 'secondary',
       DELETE: 'destructive',
       PATCH: 'warning',
     };
-    return variants[method as keyof typeof variants] || 'default';
+    return variants[method] || 'default';
   };
 
   return (
@@ -67,6 +71,7 @@ export function ApiRequestHistory() {
             onClick={fetchRequestLogs}
             className="text-xs text-blue-600 hover:text-blue-800"
             disabled={isLoading}
+            aria-label="Refresh request history"
           >
             {isLoading ? 'Loading...' : 'Refresh'}
           </button>
@@ -74,17 +79,17 @@ export function ApiRequestHistory() {
       </CardHeader>
       <CardContent>
         {error && (
-          <div className="text-sm text-red-500 mb-3">{error}</div>
+          <div className="text-sm text-red-500 mb-3" role="alert">{error}</div>
         )}
 
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-2" aria-label="Loading request history">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="h-12 bg-gray-100 animate-pulse rounded" />
             ))}
           </div>
         ) : requestLogs.length === 0 ? (
-          <div className="text-center py-6 text-gray-500">
+          <div className="text-center py-6 text-gray-500" aria-label="No request history">
             <p className="mb-2">No request history available</p>
             <p className="text-sm">Test an API endpoint to see your request history</p>
           </div>
@@ -98,7 +103,7 @@ export function ApiRequestHistory() {
                       {log.method}
                     </Badge>
                     <Badge 
-                      variant={getStatusBadgeVariant(log.status_code) as any}
+                      variant={getStatusBadgeVariant(log.status_code)}
                     >
                       {log.status_code}
                     </Badge>

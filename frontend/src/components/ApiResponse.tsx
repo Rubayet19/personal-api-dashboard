@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
-import { useRequestBuilder } from "../contexts/RequestBuilderContext";
+import { useRequestBuilder } from "../contexts/use-request-builder";
 
 export function ApiResponse() {
   const { state } = useRequestBuilder();
@@ -27,7 +27,7 @@ export function ApiResponse() {
   // Format JSON for display
   const formattedBody = typeof body === 'object' 
     ? JSON.stringify(body, null, 2) 
-    : body;
+    : String(body || '');
   
   // Determine badge color based on status code
   const getBadgeVariant = (status: number) => {

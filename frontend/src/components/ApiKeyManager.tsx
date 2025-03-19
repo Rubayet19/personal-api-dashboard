@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Edit, Trash2, Key, Plus, Loader2, ExternalLink, Copy, Check } from "lucide-react";
 import { getApiKeys, createApiKey, updateApiKey, deleteApiKey, ApiKey } from "../lib/api";
-import { useKeyUpdate } from "../contexts/KeyUpdateContext";
+import { useKeyUpdate } from "../contexts/use-key-update";
 import { isFreshLogin } from "../lib/auth";
 
 // Define API key schema for validation

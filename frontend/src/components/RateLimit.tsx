@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { ReloadIcon, InfoCircledIcon, ArrowRightIcon, PlusIcon } from "@radix-ui/react-icons";
 import { Skeleton } from "./ui/skeleton";
-import { api, type RateLimit as RateLimitType } from "../lib/api";
+import { api } from "../lib/api";
 import { Link } from "react-router-dom";
 
 interface RateLimitInfo {
@@ -26,7 +26,7 @@ export function RateLimit({ apiKeyId }: RateLimitProps) {
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
-  const fetchRateLimits = async () => {
+  const fetchRateLimits = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     setDebugInfo(null);
@@ -65,14 +65,15 @@ export function RateLimit({ apiKeyId }: RateLimitProps) {
   };
 
   useEffect(() => {
+    // Initial fetch when component mounts or apiKeyId changes
     fetchRateLimits();
     
     // Set up auto-refresh every 5 minutes
-    const intervalId = setInterval(fetchRateLimits, 5 * 60 * 1000);
+    const refreshInterval = setInterval(fetchRateLimits, 5 * 60 * 1000);
     
     // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [apiKeyId]);
+    return () => clearInterval(refreshInterval);
+  }, [apiKeyId]); // Only re-run effect if apiKeyId changes
 
   const calculatePercentage = (remaining: number, limit: number): number => {
     return Math.round((remaining / limit) * 100);
@@ -164,7 +165,7 @@ export function RateLimit({ apiKeyId }: RateLimitProps) {
       )}
 
       {debugInfo && (
-        <Alert variant="outline" className="mb-2 border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+        <Alert variant="default" className="mb-2 border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
           <InfoCircledIcon className="h-4 w-4" />
           <AlertDescription className="text-xs font-mono">{debugInfo}</AlertDescription>
         </Alert>

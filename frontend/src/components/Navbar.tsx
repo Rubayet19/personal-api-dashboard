@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { logout, getCurrentUser } from "../lib/auth";
 import { useState, useEffect } from "react";

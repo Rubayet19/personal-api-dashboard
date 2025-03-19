@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Sidebar } from "../components/Sidebar";
@@ -8,7 +8,7 @@ import { ApiRequestHistory } from "../components/ApiRequestHistory";
 import { Link } from "react-router-dom";
 import { api, type DashboardStats } from "../lib/api";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { useKeyUpdate } from "../contexts/KeyUpdateContext";
+import { useKeyUpdate } from "../contexts/use-key-update";
 import { isFreshLogin } from "../lib/auth";
 
 function DashboardPage() {
@@ -52,7 +52,7 @@ function DashboardPage() {
     },
   };
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setStatsLoading(true);
     setError(null);
     try {
@@ -69,7 +69,7 @@ function DashboardPage() {
       setStatsLoading(false);
       setIsFirstLoad(false); // Mark first load as complete
     }
-  };
+  }, [isFirstLoad]);
 
   // Fetch stats on initial load and when API keys are updated
   useEffect(() => {
@@ -86,7 +86,7 @@ function DashboardPage() {
     } else {
       fetchStats();
     }
-  }, [updateCounter, isFirstLoad, hasLoadedKeys, keysLoading]);
+  }, [updateCounter, isFirstLoad, hasLoadedKeys, keysLoading, fetchStats]);
 
   // Determine if the full dashboard is in a loading state
   const isLoading = statsLoading || (keysLoading && isFirstLoad);
