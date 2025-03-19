@@ -5,7 +5,7 @@
 The project is a web application for managing API keys and monitoring API usage across various services. It consists of a frontend built with React, Vite, TypeScript, and Tailwind CSS/Shadcn UI, and a backend using FastAPI and Python.
 
 All phases of the project have been completed, with the dashboard now fully functional. The application provides:
-- User authentication with JWT tokens
+- User authentication with JWT tokens (using modal dialogs)
 - API key management with secure storage
 - API request building and testing interface
 - Modern UI with Shadcn UI components
@@ -31,6 +31,9 @@ Recent improvements that were implemented:
 - Improved UI by removing the search bar and moving the dashboard title to the navbar for better visual balance
 - Added user profile dropdown with email display and placeholders for settings pages
 - Ensured the design is minimal and adaptable for future AWS authentication integration
+- Converted authentication to use modal dialogs instead of separate pages
+- Added "Continue with Google" placeholder button in the auth modal
+- Streamlined user experience by keeping users on the landing page during authentication
 
 ## Completed Tasks
 
@@ -45,14 +48,16 @@ Recent improvements that were implemented:
 - Created Hero section with a "Get Started" button
 - Added features section highlighting key functionality
 - Added footer with open source information and GitHub link
+- Integrated authentication modals directly into the landing page
 
 ### Phase 2: Dashboard & Authentication
 - Created dashboard layout with sidebar navigation
 - Implemented main dashboard view
 - Created authentication system with JWT tokens
 - Added protected routes for authenticated users
-- Implemented user signup and login forms with validation
+- Implemented user signup and login forms with validation in modal dialogs
 - Added in-memory user database for authentication
+- Implemented modal-based authentication flow with form switching
 
 ### Phase 3: API Key Management
 - Created ApiKeyManager component for CRUD operations on API keys
@@ -176,6 +181,12 @@ Recent improvements that were implemented:
   - Maintained separate logout button for desktop view
   - Added mobile-only logout option in dropdown menu
   - Designed with minimal dependencies for future AWS integration
+- Enhanced authentication experience
+  - Converted to modal-based authentication approach
+  - Implemented dialog-based login and signup forms
+  - Created contextual form switching within the modal
+  - Added placeholder for Google authentication
+  - Improved landing page integration by keeping users in context
 
 ## File Structure
 
@@ -185,33 +196,34 @@ frontend/
 ├── src/
 │   ├── components/
 │   │   ├── ApiKeyManager.tsx         // Updated to trigger dashboard refreshes
-│   │   ├── ApiRequestHistory.tsx      // Standalone component for displaying request history
+│   │   ├── ApiRequestHistory.tsx     // Standalone component for displaying request history
 │   │   ├── ApiRequestForm.tsx
 │   │   ├── ApiResponse.tsx
-│   │   ├── Navbar.tsx                 // Updated with user profile dropdown menu
+│   │   ├── AuthModal.tsx             // New modal-based authentication component
+│   │   ├── Navbar.tsx                // Updated with user profile dropdown menu
 │   │   ├── RateLimit.tsx
-│   │   ├── Sidebar.tsx                // Updated to remove dashboard title (now in navbar)
+│   │   ├── Sidebar.tsx               // Updated to remove dashboard title (now in navbar)
 │   │   └── ui/
-│   │       ├── badge.tsx              // Used for method and status badges
-│   │       ├── card.tsx               // Used for request history display
-│   │       ├── dropdown-menu.tsx      // Used for user profile dropdown
+│   │       ├── badge.tsx             // Used for method and status badges
+│   │       ├── card.tsx              // Used for request history display
+│   │       ├── dialog.tsx            // Used by authentication modal
+│   │       ├── dropdown-menu.tsx     // Used for user profile dropdown
 │   │       └── [other shadcn components]
 │   ├── contexts/
-│   │   ├── KeyUpdateContext.tsx       // Context for real-time dashboard updates
-│   │   └── RequestBuilderContext.tsx  // Context for Request Builder state persistence
+│   │   ├── KeyUpdateContext.tsx      // Context for real-time dashboard updates
+│   │   └── RequestBuilderContext.tsx // Context for Request Builder state persistence
 │   ├── lib/
-│   │   ├── api.ts                     // Updated with request history endpoint
-│   │   ├── auth.ts                    // Used to fetch user info and handle authentication
-│   │   ├── utils.ts                   // Contains cn() utility for merging class names
+│   │   ├── api.ts                    // Updated with request history endpoint
+│   │   ├── auth.ts                   // Used to fetch user info and handle authentication
+│   │   ├── utils.ts                  // Contains cn() utility for merging class names
 │   │   └── hooks/
-│   │       └── use-toast.ts           // Toast notification system hook
+│   │       └── use-toast.ts          // Toast notification system hook
 │   ├── pages/
 │   │   ├── ApiKeysPage.tsx
-│   │   ├── ApiTestPage.tsx            // Uses RequestBuilderProvider for state persistence
-│   │   ├── DashboardPage.tsx          // Updated to react to API key changes
-│   │   ├── LandingPage.tsx
-│   │   └── AuthPage.tsx
-│   ├── App.tsx                        // Updated to include KeyUpdateProvider
+│   │   ├── ApiTestPage.tsx           // Uses RequestBuilderProvider for state persistence
+│   │   ├── DashboardPage.tsx         // Updated to react to API key changes
+│   │   └── LandingPage.tsx           // Updated to use modal-based authentication
+│   ├── App.tsx                       // Updated to include KeyUpdateProvider and remove auth pages
 │   └── main.tsx
 ├── package.json
 └── vite.config.ts
@@ -255,6 +267,16 @@ backend/
 - Using shadcn/ui components based on Radix UI primitives
 - Consistent error handling with Toast notifications
 - Responsive design that works on all devices
+- Modal-based pattern for authentication to improve user experience
+
+#### Authentication System
+- Modal-based authentication system using Shadcn UI Dialog component
+- Self-contained AuthModal component with both login and signup forms
+- Form switching within the modal without page navigation
+- Form validation using Zod and React Hook Form
+- Support for Google authentication (placeholder)
+- Improved user experience by keeping users on the landing page
+- JWT token-based authentication with secure storage
 
 #### Request Builder State Persistence
 - Using React Context API with the RequestBuilderContext provider
@@ -292,7 +314,7 @@ backend/
 
 #### Navigation
 - React Router for routing between pages
-- Protected routes that redirect to login if not authenticated
+- Protected routes that redirect to home page when not authenticated
 - Consistent Sidebar navigation across all dashboard pages
 - Active route highlighting in Sidebar
 - Improved layout with dashboard title moved to navbar for better visual hierarchy
@@ -375,7 +397,7 @@ The dashboard UI was enhanced with:
 - Backend API runs on port 8000
 - The project successfully implements all features from Phases 1-6
 - All user flows work as expected:
-  - User authentication
+  - User authentication (now using modal dialogs)
   - API key management
   - API request building and testing
   - Rate limit visualization
@@ -407,6 +429,7 @@ The application now offers:
 - Real-time dashboard updates when API keys are modified
 - Optimized layout with improved visual hierarchy
 - User profile interface with flexible design for future authentication services
+- Modal-based authentication for an improved user experience
 
 All requirements from the project specification have been met, creating a fully functional personal API dashboard.
 
