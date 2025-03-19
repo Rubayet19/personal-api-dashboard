@@ -28,6 +28,16 @@ A centralized web dashboard for managing, monitoring, and testing various APIs. 
 - Moto (Mock AWS Services)
 - Python-Jose (JWT)
 
+### Deployment Options
+- Local development environment
+- AWS cloud deployment with:
+  - Amazon Cognito (Authentication)
+  - AWS Lambda (Serverless Backend)
+  - Amazon API Gateway
+  - Amazon DynamoDB (Database)
+  - Amazon ElastiCache (Redis)
+  - Amazon S3 & CloudFront (Frontend Hosting)
+
 ## Getting Started
 
 ### Prerequisites
@@ -121,4 +131,27 @@ personal-api-dashboard/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Deployment
+
+### Local Development
+The application can be run entirely locally with mock services:
+
+1. Start the backend:
+   ```bash
+   cd backend
+   source venv/bin/activate
+   export USE_AWS=false  # Explicitly use local mocks
+   uvicorn app.main:app --reload
+   ```
+
+2. Start the frontend:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+### AWS Deployment
+
+See [AWS Deployment Guide](docs/aws-deployment.md) for detailed instructions on deploying to AWS cloud services. 
