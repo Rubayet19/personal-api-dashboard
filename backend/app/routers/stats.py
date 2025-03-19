@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 
-from ..schemas.stats import DashboardStats
+from ..schemas.stats import DashboardStats, RequestLog
 from ..utils.auth import get_current_user
 from ..utils.mock_db import get_api_keys_for_user, get_requests_log
 from ..utils import redis_client
@@ -64,4 +64,21 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         success_rate=success_rate,
         average_latency=average_latency,
         rate_limits=rate_limits
-    ) 
+    )
+
+
+@router.get("/request-logs", response_model=List[RequestLog])
+async def get_request_logs(days: int = 30, current_user: dict = Depends(get_current_user)):
+    """
+    Get request logs for the current user
+    
+    Args:
+        days: Number of days to look back (default: 30)
+    """
+    user_id = current_user["sub"]
+    
+    # Get request logs from the specified time period
+    request_logs = get_requests_log(user_id, days=days)
+    
+    # Return the logs, most recent first
+    return sorted(request_logs, key=lambda x: x["timestamp"], reverse=True) 

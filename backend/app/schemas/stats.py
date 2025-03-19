@@ -8,4 +8,13 @@ class DashboardStats(BaseModel):
     api_calls: int
     success_rate: Optional[float] = None
     average_latency: Optional[float] = None
-    rate_limits: Dict[str, dict] = {} 
+    rate_limits: Dict[str, dict] = {}
+
+
+class RequestLog(BaseModel):
+    """Request log schema"""
+    timestamp: str
+    url: str
+    method: str
+    status_code: int
+    time_taken: float 

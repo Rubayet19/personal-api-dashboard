@@ -12,6 +12,7 @@ All phases of the project have been completed, with the dashboard now fully func
 - Rate limit tracking and visualization for API keys
 - State persistence between tabs for the API Request Builder
 - Dashboard with real-time statistics for API usage
+- Request history display directly on the dashboard
 
 Recent improvements that were implemented:
 - Added dashboard statistics functionality with dynamic data fetching
@@ -22,8 +23,8 @@ Recent improvements that were implemented:
 - Implemented dashboard refresh functionality to update statistics on demand
 - Improved empty state handling with helpful instructions
 - Removed notification bell icon from the navbar (unused feature)
-- Implemented a simplified API request builder for the dashboard
-- Added quick test functionality for API endpoints
+- Implemented standalone request history display on the dashboard
+- Added full request builder access via dashboard link
 
 ## Completed Tasks
 
@@ -125,11 +126,17 @@ Recent improvements that were implemented:
   - Tracking URL, method, status code, and time taken
   - Storing logs with timestamps
   - Filtering logs by date range
+  - Created dedicated request history component
 - Enhanced dashboard visualizations
   - Dynamic rate limit progress bars
   - Color-coded indicators for approaching limits
   - Loading states with skeleton loaders
   - Optimized data fetching to reduce API calls
+- Applied KISS principle to UI design
+  - Separated concerns between components
+  - Removed redundant functionality
+  - Focused dashboard on key information display
+  - Simplified user workflows
 - Added error handling and recovery
   - Graceful degradation when services are unavailable
   - User-friendly error messages
@@ -138,11 +145,8 @@ Recent improvements that were implemented:
   - Created dedicated statistics endpoints
   - Combined multiple data sources into a single API call
   - Added request filtering and aggregation
+  - Added endpoint for retrieving request history
 - Added refresh functionality for real-time data updates
-- Created simplified API Request Builder for dashboard
-  - Quick testing capability right from the dashboard
-  - Easy navigation to full request builder
-  - Focused UI for most common operations
 - Streamlined UI by removing unused notification feature
 
 ## File Structure
@@ -152,31 +156,51 @@ Recent improvements that were implemented:
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── ApiKeyManager.tsx
-│   │   ├── ApiMiniBuilder.tsx         // New simplified request builder for dashboard
-│   │   ├── ApiRequestForm.tsx
-│   │   ├── ApiResponse.tsx
-│   │   ├── Navbar.tsx                 // Updated to remove notification bell
-│   │   ├── RateLimit.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── ui/
-│   │       └── [shadcn components]
+│   │   ├── ApiKeyManager.tsx         // Main API key management container (refactored)
+│   │   ├── ApiKeyForm.tsx            // Component for adding/editing API keys
+│   │   ├── ApiKeyItem.tsx            // Component for displaying a single API key
+│   │   ├── ApiKeyList.tsx            // Component for rendering a list of API keys
+│   │   ├── ApiKeyDetail.tsx          // Component for viewing API key details
+│   │   ├── ApiKeyDeleteDialog.tsx    // Confirmation dialog for deleting API keys
+│   │   ├── ApiMiniBuilder.tsx        // Simplified for API testing without history
+│   │   ├── ApiRequestHistory.tsx     // Standalone component for request history
+│   │   ├── ApiRequestForm.tsx        // Advanced API request building form
+│   │   ├── ApiResponse.tsx           // API response display component
+│   │   ├── Navbar.tsx                // Application navigation bar
+│   │   ├── RateLimit.tsx             // Rate limit visualization component
+│   │   ├── Sidebar.tsx               // Application sidebar navigation
+│   │   ├── ProtectedRoute.tsx        // Auth protection for routes
+│   │   └── ui/                       // Reusable UI components
+│   │       ├── badge.tsx             // Status and method badges
+│   │       ├── button.tsx            // Button component
+│   │       ├── card.tsx              // Card container component
+│   │       ├── input.tsx             // Input field component
+│   │       ├── label.tsx             // Form label component
+│   │       ├── select.tsx            // Select dropdown component
+│   │       ├── tabs.tsx              // Tab navigation component
+│   │       ├── textarea.tsx          // Text area component
+│   │       ├── toast.tsx             // Toast notification component
+│   │       ├── toaster.tsx           // Toast manager component
+│   │       ├── alert.tsx             // Alert component
+│   │       └── skeleton.tsx          // Loading skeleton component
 │   ├── contexts/
-│   │   └── RequestBuilderContext.tsx  // Context for Request Builder state persistence
+│   │   └── RequestBuilderContext.tsx // Context for request builder state
 │   ├── lib/
-│   │   ├── api.ts                     // Contains api client object with get/post/put/delete methods
-│   │   ├── auth.ts
-│   │   ├── utils.ts                   // Contains cn() utility for merging class names
+│   │   ├── api.ts                    // API client with request history
+│   │   ├── auth.ts                   // Authentication utilities
+│   │   ├── utils.ts                  // Utility functions
 │   │   └── hooks/
-│   │       └── use-toast.ts           // Toast notification system hook
+│   │       └── use-toast.ts          // Toast hook for notifications
 │   ├── pages/
-│   │   ├── ApiKeysPage.tsx
-│   │   ├── ApiTestPage.tsx            // Uses RequestBuilderProvider for state persistence
-│   │   ├── DashboardPage.tsx          // Updated with ApiMiniBuilder component
-│   │   ├── LandingPage.tsx
-│   │   └── AuthPage.tsx
-│   ├── App.tsx
-│   └── main.tsx
+│   │   ├── ApiKeysPage.tsx           // API keys management page
+│   │   ├── ApiTestPage.tsx           // Full API request builder page
+│   │   ├── DashboardPage.tsx         // Main dashboard with request history
+│   │   ├── LandingPage.tsx           // Public landing page
+│   │   └── AuthPage.tsx              // Login/signup page
+│   ├── index.css                     // Base styles
+│   ├── vite-env.d.ts                 // TypeScript environment
+│   ├── App.tsx                       // Application routes
+│   └── main.tsx                      // Application entry point
 ├── package.json
 └── vite.config.ts
 ```
@@ -191,13 +215,13 @@ backend/
 │   │   ├── api_keys.py                // Deletes associated rate limits when API keys are removed
 │   │   ├── proxy.py                   // Logs API requests and tracks rate limits for stored API keys
 │   │   ├── rate_limits.py             // Endpoints for rate limit data
-│   │   └── stats.py                   // Router for dashboard statistics
+│   │   └── stats.py                   // Router for dashboard statistics and request history
 │   ├── schemas/
 │   │   ├── auth.py
 │   │   ├── api_key.py
 │   │   ├── proxy.py
 │   │   ├── rate_limit.py
-│   │   └── stats.py                   // Schema for dashboard statistics
+│   │   └── stats.py                   // Updated with RequestLog schema
 │   ├── utils/
 │   │   ├── auth.py
 │   │   ├── mock_db.py                 // Updated with request logging functionality
@@ -210,6 +234,29 @@ backend/
 └── requirements.txt
 ```
 
+### Completed Cleanup Tasks
+- Removed empty/unused directories: `providers`, `mocks`, `services`, `context`, `assets`
+- Removed unused UI components: `sheet.tsx`, `avatar.tsx`, `dialog.tsx`
+- Removed redundant CSS file: `App.css` (using Tailwind)
+- Removed unused react.svg from assets (project doesn't use it)
+- Removed unused API functions: `getApiKey()` and `getRateLimit()`
+- Simplified ApiMiniBuilder by removing ApiRequestHistory dependency
+- Updated ApiRequestHistory to be a standalone component
+- Applied KISS principle to reduce code duplication
+- Maintained DRY principles by removing redundant functionality
+- Ensured consistent API interfaces by keeping both object methods and standalone functions
+- Refactored ApiKeyManager into smaller components following the component size limit guideline:
+  - Created ApiKeyForm component for add/edit functionality
+  - Created ApiKeyItem component for displaying individual API keys
+  - Created ApiKeyList component for rendering the list of API keys
+  - Created ApiKeyDetail component for viewing detailed API key information
+  - Created ApiKeyDeleteDialog component for confirmation dialogs
+  - Reduced ApiKeyManager from 471 lines to under 200 lines
+- Fixed project structure issues:
+  - Removed redundant backend/ directory inside frontend/
+  - Removed incorrect @/ directory inside frontend/
+  - Standardized import paths using @/ alias for UI components
+
 ## Technical Implementation Details
 
 ### Frontend
@@ -219,6 +266,10 @@ backend/
 - Using shadcn/ui components based on Radix UI primitives
 - Consistent error handling with Toast notifications
 - Responsive design that works on all devices
+- Decomposed large components into smaller, focused ones:
+  - The API key management functionality is now split across multiple components
+  - Each component handles a specific responsibility (display, form, deletion, etc.)
+  - This improves maintainability and readability of the codebase
 
 #### Request Builder State Persistence
 - Using React Context API with the RequestBuilderContext provider
@@ -310,6 +361,7 @@ A new request logging system was implemented to track API usage:
 - Logs can be queried by date range for historical analysis
 - Success rate is calculated based on HTTP status codes
 - Average latency provides insights into API performance
+- Request history is now displayed directly on the dashboard
 
 ### Dashboard UI Improvements
 
@@ -319,7 +371,8 @@ The dashboard UI was enhanced with:
 - Refresh button to manually update statistics
 - Empty states with helpful user guidance
 - Concise formatting of statistics (e.g., response times in ms/s)
-- Mini API request builder for quick testing
+- Dedicated request history component showing past API calls
+- Simplified UI focusing on key information
 - Removal of unused notification features
 
 ## Notes

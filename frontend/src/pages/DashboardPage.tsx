@@ -3,7 +3,7 @@ import { Sidebar } from "../components/Sidebar";
 import { Navbar } from "../components/Navbar";
 import { ApiKeyManager } from "../components/ApiKeyManager";
 import { RateLimit } from "../components/RateLimit";
-import { ApiMiniBuilder } from "../components/ApiMiniBuilder";
+import { ApiRequestHistory } from "../components/ApiRequestHistory";
 import { Link } from "react-router-dom";
 import { api, type DashboardStats } from "../lib/api";
 import { ReloadIcon } from "@radix-ui/react-icons";
@@ -326,15 +326,15 @@ function DashboardPage() {
             </div>
           </div>
 
-          {/* API Request Builder Section */}
+          {/* API Request History Section */}
           <div className="mt-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">API Request Builder</h2>
+              <h2 className="text-lg font-semibold text-gray-900">API Request History</h2>
               <Link 
                 to="/dashboard/request-builder" 
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
               >
-                Advanced Options
+                Build New Request
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   className="h-4 w-4 ml-1" 
@@ -347,7 +347,7 @@ function DashboardPage() {
               </Link>
             </div>
             
-            <ApiMiniBuilder />
+            <ApiRequestHistory />
           </div>
         </main>
       </div>
