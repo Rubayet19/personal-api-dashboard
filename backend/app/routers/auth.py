@@ -64,7 +64,10 @@ async def get_token(form_data: OAuth2PasswordRequestForm = Depends()):
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user = Depends(get_current_user)):
     """Get current user information."""
+    # Use the email from token as both id and email since we don't have
+    # a separate id in the token payload
+    email = current_user["sub"]
     return {
-        "id": current_user["id"],
-        "email": current_user["email"]
+        "id": email,  # Use email as ID for simplicity
+        "email": email
     } 

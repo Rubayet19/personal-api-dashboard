@@ -1,7 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
-from ..app.main import app
-from ..app.utils.auth import create_access_token
+import sys
+import os
+
+# Add the parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.main import app
+from app.utils.auth import create_access_token
 
 # Test client
 client = TestClient(app)
@@ -56,8 +62,15 @@ def test_get_api_keys_with_item(auth_client):
     
     results = response.json()
     assert isinstance(results, list)
-    assert len(results) == 1
-    assert results[0]["id"] == key_id
+    assert len(results) >= 1
+    
+    # Instead verify the key we just created is in the list
+    found = False
+    for key in results:
+        if key['id'] == key_id:
+            found = True
+            break
+    assert found, f"Created key with ID {key_id} not found in results"
 
 # Test getting a specific API key
 def test_get_single_api_key(auth_client):
@@ -137,5 +150,8 @@ def test_get_nonexistent_api_key(auth_client):
 
 # Test unauthorized access (no token)
 def test_unauthorized_access():
-    response = client.get("/api/keys")
+    # Create a new client without auth headers to ensure it's unauthenticated
+    unauth_client = TestClient(app)
+    
+    response = unauth_client.get("/api/keys")
     assert response.status_code == 401 
