@@ -7,7 +7,6 @@ setup(
     install_requires=[
         "fastapi>=0.115.0",
         "uvicorn>=0.34.0",
-        "strawberry-graphql>=0.262.0",
         "python-jose[cryptography]>=3.4.0",
         "passlib[bcrypt]>=1.7.4",
         "python-multipart>=0.0.20",

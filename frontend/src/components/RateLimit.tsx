@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { ReloadIcon, InfoCircledIcon, ArrowRightIcon, PlusIcon } from "@radix-ui/react-icons";
 import { Skeleton } from "./ui/skeleton";
-import { api, type RateLimit as RateLimitType } from "@/lib/api";
+import { api, type RateLimit as RateLimitType } from "../lib/api";
 import { Link } from "react-router-dom";
 
 interface RateLimitInfo {

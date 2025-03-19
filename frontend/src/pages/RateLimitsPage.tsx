@@ -1,6 +1,6 @@
-import { Navbar } from "@/components/Navbar";
-import { Sidebar } from "@/components/Sidebar";
-import { RateLimit } from "@/components/RateLimit";
+import { Navbar } from "../components/Navbar";
+import { Sidebar } from "../components/Sidebar";
+import { RateLimit } from "../components/RateLimit";
 
 export function RateLimitsPage() {
   return (
