@@ -16,6 +16,26 @@ All phases of the project have been completed, with the dashboard now fully func
 - Real-time dashboard updates when API keys are changed
 - User profile dropdown with account information
 
+## AWS Migration Status
+
+### Completed
+1. ✅ **AWS Resources Setup**
+   - DynamoDB Table
+   - S3 Bucket
+   - IAM Role for Lambda
+   - API Gateway
+
+2. ✅ **Backend Code Updates**
+   - User authentication migrated to DynamoDB
+   - API key storage migrated to real DynamoDB
+   - Decision made to keep Redis for rate limits
+
+### Next Steps
+1. Package Backend for Lambda
+2. Configure API Gateway Integration
+3. Update Frontend for AWS Endpoints
+4. Deploy and Test
+
 ## AWS Migration Progress
 
 The project is currently being migrated from local development to AWS cloud services. The following AWS resources have been set up:
@@ -67,24 +87,23 @@ After evaluating various options, we've decided on the following AWS deployment 
 - This maintains our current API key management logic while providing cloud persistence
 
 ### Rate Limit Tracking
-- Instead of using Redis, we'll store rate limit data in DynamoDB
-- We'll use the TTL feature of DynamoDB for automatic cleanup of expired rate limits
-- Rate limits will be stored with the pattern: `PK = USER#{username}`, `SK = RATELIMIT#{api_name}`
-- This simplifies our architecture by using a single storage service for all data
+- We'll continue using Redis for rate limit data instead of migrating to DynamoDB
+- Redis is well-suited for rate limit tracking with its TTL feature for automatic cleanup
+- Rate limits will continue to be stored with the current Redis key pattern
+- This approach leverages Redis's strengths for time-based data while using DynamoDB for persistent data
 
 ### DynamoDB Data Patterns
 Our DynamoDB table is already structured with a flexible schema that can accommodate all these data types:
 - Users: `PK = USER#{username}`, `SK = PROFILE`
 - API Keys: `PK = USER#{username}`, `SK = APIKEY#{key_id}`
-- Rate Limits: `PK = USER#{username}`, `SK = RATELIMIT#{api_name}`
 
 ### Migration Plan
 To complete the migration, we need to:
 
-1. Update Backend Code:
-   - Replace in-memory user store with DynamoDB operations
-   - Replace mock DynamoDB for API keys with real DynamoDB
-   - Replace Redis client with DynamoDB for rate limits
+1. ✅ Update Backend Code:
+   - ✅ Replace in-memory user store with DynamoDB operations
+   - ✅ Replace mock DynamoDB for API keys with real DynamoDB
+   - ❌ Replace Redis client with DynamoDB for rate limits (DECIDED TO KEEP REDIS)
 
 2. Package Backend for Lambda:
    - Create Lambda deployment package using our existing scripts
