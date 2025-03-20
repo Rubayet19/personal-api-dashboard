@@ -20,26 +20,21 @@ All phases of the project have been completed, with the dashboard now fully func
 
 The project is currently being migrated from local development to AWS cloud services. The following AWS resources have been set up:
 
-1. **Amazon Cognito User Pool**
-   - User Pool ID: `us-east-2_0Yl5Bw4t1`
-   - App Client ID: `uqopethg05fvi7tna64hkkng7`
-   - Configured with password requirements and email verification
-
-2. **Amazon DynamoDB Table**
+1. **Amazon DynamoDB Table**
    - Table Name: `api-dashboard`
    - Partition Key: `PK`
    - Sort Key: `SK`
    - GSI: `GSI1` with partition key `GSI1PK` and sort key `GSI1SK`
    - PAY_PER_REQUEST billing mode (on-demand capacity)
 
-3. **Amazon S3 Bucket**
+2. **Amazon S3 Bucket**
    - Bucket Name: `api-dashboard-frontend-166868085052`
    - Configured for static website hosting
    - Index document: `index.html`
    - Error document: `index.html`
    - Website URL: `http://api-dashboard-frontend-166868085052.s3-website-us-east-2.amazonaws.com`
 
-4. **AWS IAM Role for Lambda**
+3. **AWS IAM Role for Lambda**
    - Role Name: `api-dashboard-lambda-role`
    - Role ARN: `arn:aws:iam::166868085052:role/api-dashboard-lambda-role`
    - Attached Policies:
@@ -47,7 +42,7 @@ The project is currently being migrated from local development to AWS cloud serv
      - AmazonDynamoDBFullAccess
      - AmazonCognitoReadOnly
 
-5. **Amazon API Gateway (HTTP API)**
+4. **Amazon API Gateway (HTTP API)**
    - API ID: `uyu9oyhxyk`
    - API Name: `api-dashboard-api`
    - Protocol Type: HTTP
@@ -55,33 +50,72 @@ The project is currently being migrated from local development to AWS cloud serv
 
 We've successfully completed **Phase 1: AWS Resources Setup** of our AWS migration. All necessary AWS resources have been created and are ready for integration with our application code.
 
-The configuration values for AWS resources have been saved to `~/.api-dashboard/aws-config.env` for use in deployment scripts. All AWS resources have been created in the `us-east-2` (Ohio) region and are within AWS Free Tier limits, ensuring minimal to no costs for personal usage.
+## AWS Deployment Strategy
 
-The project is now ready to proceed with **Phase 2: Backend Code Integration** as outlined in the AWS deployment guide (`docs/aws-deployment.md`). Future migration tasks are detailed in the deployment guide with step-by-step instructions for each phase.
+After evaluating various options, we've decided on the following AWS deployment strategy:
 
-Recent improvements that were implemented:
-- Added dashboard statistics functionality with dynamic data fetching
-- Implemented API request logging to track calls, success rates, and latency
-- Added average latency calculation for API requests
-- Created advanced rate limit visualization on the dashboard
-- Added success rate calculation for API requests
-- Implemented dashboard refresh functionality to update statistics on demand
-- Improved empty state handling with helpful instructions
-- Removed notification bell icon from the navbar (unused feature)
-- Implemented standalone request history display on the dashboard
-- Added full request builder access via dashboard link
-- Enhanced dashboard reactivity with real-time updates when API keys are modified
-- Improved UI by removing the search bar and moving the dashboard title to the navbar for better visual balance
-- Added user profile dropdown with email display and placeholders for settings pages
-- Ensured the design is minimal and adaptable for future AWS authentication integration
-- Converted authentication to use modal dialogs instead of separate pages
-- Added "Continue with Google" placeholder button in the auth modal
-- Streamlined user experience by keeping users on the landing page during authentication
-- Fixed test failures in authentication and rate limit functionality
-- Improved test coverage to 84% across the backend codebase
-- Created a comprehensive end-to-end test validating the complete user workflow
-- Addressed inconsistencies in API name casing in rate limit tests
-- Fixed parameter handling in Redis client functions
+### Authentication Approach
+- Instead of using Amazon Cognito, we'll adapt our existing JWT authentication system to use DynamoDB
+- This will maintain our current authentication flow while providing persistent storage
+- JWT token generation and validation logic will remain unchanged
+- User data will be stored in DynamoDB with the pattern: `PK = USER#{username}`, `SK = PROFILE`
+
+### API Key Storage
+- We'll replace our mock DynamoDB implementation with real DynamoDB
+- API keys will continue to be encrypted using Fernet
+- Keys will be stored with the pattern: `PK = USER#{username}`, `SK = APIKEY#{key_id}`
+- This maintains our current API key management logic while providing cloud persistence
+
+### Rate Limit Tracking
+- Instead of using Redis, we'll store rate limit data in DynamoDB
+- We'll use the TTL feature of DynamoDB for automatic cleanup of expired rate limits
+- Rate limits will be stored with the pattern: `PK = USER#{username}`, `SK = RATELIMIT#{api_name}`
+- This simplifies our architecture by using a single storage service for all data
+
+### DynamoDB Data Patterns
+Our DynamoDB table is already structured with a flexible schema that can accommodate all these data types:
+- Users: `PK = USER#{username}`, `SK = PROFILE`
+- API Keys: `PK = USER#{username}`, `SK = APIKEY#{key_id}`
+- Rate Limits: `PK = USER#{username}`, `SK = RATELIMIT#{api_name}`
+
+### Migration Plan
+To complete the migration, we need to:
+
+1. Update Backend Code:
+   - Replace in-memory user store with DynamoDB operations
+   - Replace mock DynamoDB for API keys with real DynamoDB
+   - Replace Redis client with DynamoDB for rate limits
+
+2. Package Backend for Lambda:
+   - Create Lambda deployment package using our existing scripts
+   - Configure Lambda function to use our DynamoDB table
+
+3. Configure API Gateway:
+   - Set up integration between API Gateway and Lambda
+   - Configure routes to forward requests to Lambda
+
+4. Update Frontend:
+   - Update API endpoint URL to point to API Gateway
+   - Build frontend for S3 deployment
+
+5. Deploy to AWS:
+   - Upload frontend to S3
+   - Deploy backend to Lambda
+   - Test the complete flow
+
+This approach follows the KISS principle by using a single storage system (DynamoDB) for all data persistence needs, which simplifies our architecture while maintaining our current application logic.
+
+## Next Steps
+
+The next steps for completing the AWS migration are:
+
+1. Update the backend code to use DynamoDB for all storage needs
+2. Package the backend for Lambda deployment
+3. Configure API Gateway integration
+4. Update the frontend to use the API Gateway endpoint
+5. Deploy and test the complete application
+
+The AWS deployment guide (`docs/aws-deployment.md`) provides detailed scripts and instructions for these steps.
 
 ## Completed Tasks
 

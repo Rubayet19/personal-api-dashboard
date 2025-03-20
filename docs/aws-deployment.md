@@ -23,36 +23,10 @@ This guide provides step-by-step instructions for deploying the Personal API Das
 
 ## Phase 1: AWS Resources Setup
 
-### 1.1 Cognito User Pool
+### 1.1 DynamoDB Table
 
 ```bash
-# Create User Pool
-USER_POOL_ID=$(aws cognito-idp create-user-pool \
-  --pool-name ApiDashboard \
-  --email-configuration EmailSendingAccount=COGNITO_DEFAULT \
-  --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
-  --auto-verified-attributes email \
-  --query 'UserPool.Id' \
-  --output text)
-
-echo "User Pool ID: $USER_POOL_ID"
-
-# Create App Client
-aws cognito-idp create-user-pool-client \
-  --user-pool-id $USER_POOL_ID \
-  --client-name ApiDashboardClient \
-  --no-generate-secret \
-  --explicit-auth-flows ALLOW_ADMIN_USER_PASSWORD_AUTH ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH
-
-# Get the App Client ID
-APP_CLIENT_ID=$(aws cognito-idp list-user-pool-clients --user-pool-id $USER_POOL_ID --query "UserPoolClients[0].ClientId" --output text)
-echo "App Client ID: $APP_CLIENT_ID"
-```
-
-### 1.2 DynamoDB Table
-
-```bash
-# Create a single DynamoDB table for all data
+# Create a single DynamoDB table for all data (authentication, API keys, and rate limits)
 aws dynamodb create-table \
   --table-name api-dashboard \
   --attribute-definitions \
@@ -67,10 +41,25 @@ aws dynamodb create-table \
     "IndexName=GSI1,KeySchema=[{AttributeName=GSI1PK,KeyType=HASH},{AttributeName=GSI1SK,KeyType=RANGE}],Projection={ProjectionType=ALL}" \
   --billing-mode PAY_PER_REQUEST
 
-echo "DynamoDB table 'api-dashboard' created"
+# Enable Time-To-Live for automatic cleanup of expired rate limits
+aws dynamodb update-time-to-live \
+  --table-name api-dashboard \
+  --time-to-live-specification "Enabled=true,AttributeName=ttl"
+
+echo "DynamoDB table 'api-dashboard' created with TTL enabled"
 ```
 
-### 1.3 S3 Bucket for Frontend
+The DynamoDB table will be used for:
+- User authentication data (maintaining our existing JWT system)
+- API key storage (encrypted using Fernet)
+- Rate limit tracking (with TTL for automatic expiration)
+
+Data Access Patterns:
+- Users: `PK = USER#{username}`, `SK = PROFILE`
+- API Keys: `PK = USER#{username}`, `SK = APIKEY#{key_id}`
+- Rate Limits: `PK = USER#{username}`, `SK = RATELIMIT#{api_name}`
+
+### 1.2 S3 Bucket for Frontend
 
 ```bash
 # Generate a unique bucket name using your account ID
@@ -108,7 +97,7 @@ echo "Website URL: http://$BUCKET_NAME.s3-website-$(aws configure get region).am
 
 > **Note**: If you encounter a "BlockPublicPolicy" error, you need to disable "Block Public Access" settings for the bucket in the AWS Console under Permissions.
 
-### 1.4 Lambda IAM Role
+### 1.3 Lambda IAM Role
 
 ```bash
 # Create trust policy document
@@ -141,16 +130,12 @@ aws iam attach-role-policy \
   --role-name api-dashboard-lambda-role \
   --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
 
-aws iam attach-role-policy \
-  --role-name api-dashboard-lambda-role \
-  --policy-arn arn:aws:iam::aws:policy/AmazonCognitoReadOnly
-
 # Get the role ARN for later use
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name api-dashboard-lambda-role --query 'Role.Arn' --output text)
 echo "Lambda Role ARN: $LAMBDA_ROLE_ARN"
 ```
 
-### 1.5 API Gateway
+### 1.4 API Gateway
 
 ```bash
 # Create HTTP API
@@ -164,7 +149,7 @@ echo "API Gateway ID: $API_ID"
 echo "API Gateway Endpoint: https://$API_ID.execute-api.$(aws configure get region).amazonaws.com"
 ```
 
-### 1.6 Save Configuration
+### 1.5 Save Configuration
 
 ```bash
 # Set AWS region
@@ -177,8 +162,6 @@ fi
 mkdir -p ~/.api-dashboard
 cat > ~/.api-dashboard/aws-config.env << EOF
 # AWS Resource Configuration
-USER_POOL_ID=$USER_POOL_ID
-APP_CLIENT_ID=$APP_CLIENT_ID
 DYNAMODB_TABLE=api-dashboard
 S3_BUCKET=$BUCKET_NAME
 LAMBDA_ROLE_ARN=$LAMBDA_ROLE_ARN
@@ -205,8 +188,6 @@ cat > backend/app/config/aws_config.py << EOF
 """AWS resource configuration for the API Dashboard."""
 
 # AWS Resource Configuration
-USER_POOL_ID = "${USER_POOL_ID}"
-APP_CLIENT_ID = "${APP_CLIENT_ID}"
 DYNAMODB_TABLE = "api-dashboard"
 S3_BUCKET = "${BUCKET_NAME}"
 LAMBDA_ROLE_ARN = "${LAMBDA_ROLE_ARN}"
@@ -214,10 +195,6 @@ API_GATEWAY_ID = "${API_ID}"
 API_GATEWAY_URL = "https://${API_ID}.execute-api.${AWS_REGION}.amazonaws.com"
 REGION = "${AWS_REGION}"
 S3_WEBSITE_URL = "http://${BUCKET_NAME}.s3-website-${AWS_REGION}.amazonaws.com"
-
-# Flag to determine if we should use AWS services or local mock services
-USE_AWS = True
-EOF
 ```
 
 ### 2.2 Update Requirements
@@ -229,7 +206,6 @@ cat >> backend/requirements.txt << EOF
 # AWS dependencies
 boto3==1.34.0
 mangum==0.17.0
-pycognito==2023.2.0
 EOF
 ```
 
@@ -245,23 +221,207 @@ cat > backend/app/utils/aws/dynamodb.py << EOF
 import boto3
 from ..auth import get_current_user
 from ...config.aws_config import DYNAMODB_TABLE, REGION
+import time
 
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
 table = dynamodb.Table(DYNAMODB_TABLE)
 
-# Implementation functions will be added in Phase 2.4
-EOF
+# User Management Functions
+def get_user(username):
+    """Get user from DynamoDB."""
+    try:
+        response = table.get_item(
+            Key={
+                'PK': f'USER#{username}',
+                'SK': 'PROFILE'
+            }
+        )
+        return response.get('Item')
+    except Exception as e:
+        print(f"Error getting user: {e}")
+        return None
 
-# Create Cognito utility
-cat > backend/app/utils/aws/cognito.py << EOF
-"""Cognito utilities for the API Dashboard."""
-import boto3
-from pycognito import Cognito
-from ...config.aws_config import USER_POOL_ID, APP_CLIENT_ID, REGION
+def create_user(username, password_hash, email):
+    """Create user in DynamoDB."""
+    try:
+        table.put_item(
+            Item={
+                'PK': f'USER#{username}',
+                'SK': 'PROFILE',
+                'username': username,
+                'password': password_hash,
+                'email': email,
+                'created_at': int(time.time())
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return False
 
-cognito_idp = boto3.client('cognito-idp', region_name=REGION)
+# API Key Functions
+def store_api_key(user_id, key_id, api_name, encrypted_key, description=None):
+    """Store encrypted API key in DynamoDB."""
+    try:
+        item = {
+            'PK': f'USER#{user_id}',
+            'SK': f'APIKEY#{key_id}',
+            'GSI1PK': f'APIKEYS',
+            'GSI1SK': f'USER#{user_id}',
+            'key_id': key_id,
+            'api_name': api_name,
+            'encrypted_key': encrypted_key,
+            'created_at': int(time.time())
+        }
+        
+        if description:
+            item['description'] = description
+            
+        table.put_item(Item=item)
+        return True
+    except Exception as e:
+        print(f"Error storing API key: {e}")
+        return False
 
-# Implementation functions will be added in Phase 2.4
+def get_api_keys(user_id):
+    """Get all API keys for a user from DynamoDB."""
+    try:
+        response = table.query(
+            KeyConditionExpression='PK = :pk AND begins_with(SK, :sk)',
+            ExpressionAttributeValues={
+                ':pk': f'USER#{user_id}',
+                ':sk': 'APIKEY#'
+            }
+        )
+        return response.get('Items', [])
+    except Exception as e:
+        print(f"Error getting API keys: {e}")
+        return []
+
+def get_api_key(user_id, key_id):
+    """Get a specific API key from DynamoDB."""
+    try:
+        response = table.get_item(
+            Key={
+                'PK': f'USER#{user_id}',
+                'SK': f'APIKEY#{key_id}'
+            }
+        )
+        return response.get('Item')
+    except Exception as e:
+        print(f"Error getting API key: {e}")
+        return None
+
+def update_api_key(user_id, key_id, api_name=None, encrypted_key=None, description=None):
+    """Update API key in DynamoDB."""
+    try:
+        update_expression = "SET "
+        expression_attribute_values = {}
+        
+        if api_name:
+            update_expression += "api_name = :api_name, "
+            expression_attribute_values[':api_name'] = api_name
+            
+        if encrypted_key:
+            update_expression += "encrypted_key = :encrypted_key, "
+            expression_attribute_values[':encrypted_key'] = encrypted_key
+            
+        if description:
+            update_expression += "description = :description, "
+            expression_attribute_values[':description'] = description
+            
+        update_expression += "updated_at = :updated_at"
+        expression_attribute_values[':updated_at'] = int(time.time())
+        
+        table.update_item(
+            Key={
+                'PK': f'USER#{user_id}',
+                'SK': f'APIKEY#{key_id}'
+            },
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_attribute_values
+        )
+        return True
+    except Exception as e:
+        print(f"Error updating API key: {e}")
+        return False
+
+def delete_api_key(user_id, key_id):
+    """Delete API key from DynamoDB."""
+    try:
+        table.delete_item(
+            Key={
+                'PK': f'USER#{user_id}',
+                'SK': f'APIKEY#{key_id}'
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error deleting API key: {e}")
+        return False
+
+# Rate Limit Functions
+def update_rate_limit(user_id, api_name, limit, remaining, reset_at):
+    """Store rate limit information in DynamoDB with TTL."""
+    try:
+        table.put_item(
+            Item={
+                'PK': f'USER#{user_id}',
+                'SK': f'RATELIMIT#{api_name}',
+                'limit': limit,
+                'remaining': remaining,
+                'reset_at': reset_at,
+                'updated_at': int(time.time()),
+                'ttl': reset_at  # DynamoDB TTL attribute for automatic cleanup
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error updating rate limit: {e}")
+        return False
+
+def get_rate_limit(user_id, api_name):
+    """Get rate limit information from DynamoDB."""
+    try:
+        response = table.get_item(
+            Key={
+                'PK': f'USER#{user_id}',
+                'SK': f'RATELIMIT#{api_name}'
+            }
+        )
+        return response.get('Item')
+    except Exception as e:
+        print(f"Error getting rate limit: {e}")
+        return None
+
+def get_all_rate_limits(user_id):
+    """Get all rate limits for a user from DynamoDB."""
+    try:
+        response = table.query(
+            KeyConditionExpression='PK = :pk AND begins_with(SK, :sk)',
+            ExpressionAttributeValues={
+                ':pk': f'USER#{user_id}',
+                ':sk': 'RATELIMIT#'
+            }
+        )
+        return response.get('Items', [])
+    except Exception as e:
+        print(f"Error getting rate limits: {e}")
+        return []
+
+def delete_rate_limit(user_id, api_name):
+    """Delete rate limit information from DynamoDB."""
+    try:
+        table.delete_item(
+            Key={
+                'PK': f'USER#{user_id}',
+                'SK': f'RATELIMIT#{api_name}'
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error deleting rate limit: {e}")
+        return False
 EOF
 ```
 
@@ -281,17 +441,7 @@ EOF
 
 ## Phase 3: Frontend Code Integration
 
-### 3.1 Install AWS Amplify
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install AWS Amplify
-npm install aws-amplify
-```
-
-### 3.2 Create Environment Files
+### 3.1 Update Environment Configuration
 
 ```bash
 # Create development environment file
@@ -303,41 +453,18 @@ EOF
 # Create production environment file
 cat > frontend/.env.production << EOF
 VITE_API_URL=${API_GATEWAY_URL}
-VITE_USER_POOL_ID=${USER_POOL_ID}
-VITE_APP_CLIENT_ID=${APP_CLIENT_ID}
-VITE_AWS_REGION=${AWS_REGION}
-VITE_USE_AWS=true
+VITE_USE_AWS=false
 EOF
 ```
 
-### 3.3 Create AWS Configuration
+### 3.2 Update API Endpoint Configuration
 
 ```bash
-# Create AWS configuration file
-mkdir -p frontend/src/lib/aws
-cat > frontend/src/lib/aws/config.ts << EOF
-// AWS Configuration
-export const awsConfig = {
-  region: import.meta.env.VITE_AWS_REGION,
-  userPoolId: import.meta.env.VITE_USER_POOL_ID,
-  userPoolWebClientId: import.meta.env.VITE_APP_CLIENT_ID,
-  authenticationFlowType: 'USER_PASSWORD_AUTH',
-};
-EOF
-
-# Create Cognito Authentication Service
-cat > frontend/src/lib/aws/auth-service.ts << EOF
-// AWS Cognito Authentication Service
-import { Auth } from 'aws-amplify';
-import { awsConfig } from './config';
-
-// Initialize Amplify
-Auth.configure(awsConfig);
-
-export const AuthService = {
-  // Implementation functions will be added in Phase 3.4
-};
-EOF
+# Update the API configuration file if it exists
+if [ -f frontend/src/lib/api.ts ]; then
+  # Replace local API URL with environment variable
+  sed -i 's|const API_URL = "http://localhost:8000"|const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"|g' frontend/src/lib/api.ts
+fi
 ```
 
 ## Phase 4: Packaging and Deployment
@@ -395,39 +522,63 @@ if [ ! -f lambda_function.zip ]; then
   ./scripts/package_backend.sh
 fi
 
-# Create Lambda function
-aws lambda create-function \
-  --function-name api-dashboard \
-  --runtime python3.10 \
-  --role ${LAMBDA_ROLE_ARN} \
-  --handler app.lambda_handler.handler \
-  --zip-file fileb://lambda_function.zip \
-  --timeout 30 \
-  --memory-size 256 \
-  --region ${AWS_REGION}
+# Check if Lambda function exists
+FUNCTION_EXISTS=$(aws lambda list-functions --query "Functions[?FunctionName=='api-dashboard'].FunctionName" --output text)
 
-# Create API Gateway integration
-aws apigatewayv2 create-integration \
-  --api-id ${API_ID} \
-  --integration-type AWS_PROXY \
-  --integration-uri arn:aws:lambda:${AWS_REGION}:${ACCOUNT_ID}:function:api-dashboard \
-  --payload-format-version 2.0 \
-  --integration-method POST
+if [ -z "$FUNCTION_EXISTS" ]; then
+  # Create Lambda function
+  aws lambda create-function \
+    --function-name api-dashboard \
+    --runtime python3.10 \
+    --role ${LAMBDA_ROLE_ARN} \
+    --handler app.lambda_handler.handler \
+    --zip-file fileb://lambda_function.zip \
+    --timeout 30 \
+    --memory-size 256 \
+    --region ${AWS_REGION}
+else
+  # Update existing Lambda function
+  aws lambda update-function-code \
+    --function-name api-dashboard \
+    --zip-file fileb://lambda_function.zip
+fi
 
-# Create catch-all route
-INTEGRATION_ID=\$(aws apigatewayv2 get-integrations --api-id ${API_ID} --query "Items[0].IntegrationId" --output text)
-aws apigatewayv2 create-route \
-  --api-id ${API_ID} \
-  --route-key 'ANY /{proxy+}' \
-  --target "integrations/\$INTEGRATION_ID"
+# Create API Gateway integration if not already exists
+INTEGRATIONS=$(aws apigatewayv2 get-integrations --api-id ${API_ID} --query "Items[?IntegrationUri=='arn:aws:lambda:${AWS_REGION}:${ACCOUNT_ID}:function:api-dashboard'].IntegrationId" --output text)
 
-# Add Lambda permission for API Gateway
-aws lambda add-permission \
-  --function-name api-dashboard \
-  --statement-id apigateway-invoke \
-  --action lambda:InvokeFunction \
-  --principal apigateway.amazonaws.com \
-  --source-arn "arn:aws:execute-api:${AWS_REGION}:${ACCOUNT_ID}:${API_ID}/*"
+if [ -z "$INTEGRATIONS" ]; then
+  # Create new integration
+  INTEGRATION_ID=$(aws apigatewayv2 create-integration \
+    --api-id ${API_ID} \
+    --integration-type AWS_PROXY \
+    --integration-uri arn:aws:lambda:${AWS_REGION}:${ACCOUNT_ID}:function:api-dashboard \
+    --payload-format-version 2.0 \
+    --integration-method POST \
+    --query "IntegrationId" \
+    --output text)
+  
+  # Create catch-all route
+  aws apigatewayv2 create-route \
+    --api-id ${API_ID} \
+    --route-key 'ANY /{proxy+}' \
+    --target "integrations/$INTEGRATION_ID"
+else
+  # Use existing integration
+  INTEGRATION_ID=$INTEGRATIONS
+fi
+
+# Add Lambda permission for API Gateway if not already exists
+STATEMENT_ID="apigateway-invoke"
+PERMISSIONS=$(aws lambda get-policy --function-name api-dashboard --query "Policy" --output text 2>/dev/null || echo "")
+
+if [[ "$PERMISSIONS" != *"$STATEMENT_ID"* ]]; then
+  aws lambda add-permission \
+    --function-name api-dashboard \
+    --statement-id $STATEMENT_ID \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:${AWS_REGION}:${ACCOUNT_ID}:${API_ID}/*"
+fi
 
 # Deploy API
 aws apigatewayv2 create-deployment \
@@ -473,7 +624,6 @@ aws cloudfront create-distribution \
 
 ### AWS Free Tier Usage
 
-- **Cognito**: 50,000 MAUs per month (free)
 - **DynamoDB**: 25 GB storage, 25 WCUs/RCUs (free) 
 - **S3**: 5 GB storage, 20,000 GET requests (free)
 - **Lambda**: 1M requests, 400,000 GB-seconds (free)
@@ -498,9 +648,6 @@ aws s3 rb s3://${BUCKET_NAME}
 # Delete DynamoDB table
 aws dynamodb delete-table --table-name api-dashboard
 
-# Delete Cognito User Pool
-aws cognito-idp delete-user-pool --user-pool-id ${USER_POOL_ID}
-
 # Detach and delete IAM role policies
 aws iam detach-role-policy \
   --role-name api-dashboard-lambda-role \
@@ -509,10 +656,6 @@ aws iam detach-role-policy \
 aws iam detach-role-policy \
   --role-name api-dashboard-lambda-role \
   --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-
-aws iam detach-role-policy \
-  --role-name api-dashboard-lambda-role \
-  --policy-arn arn:aws:iam::aws:policy/AmazonCognitoReadOnly
 
 aws iam delete-role --role-name api-dashboard-lambda-role
 ```
@@ -526,8 +669,8 @@ aws iam delete-role --role-name api-dashboard-lambda-role
    - Solution: Add CORS configuration to API Gateway
 
 2. **Authentication Errors**:
-   - Problem: Cognito authentication fails
-   - Solution: Check auth flows, token expiration, and Cognito setup
+   - Problem: JWT authentication fails
+   - Solution: Check token generation and validation logic, ensure DynamoDB integration is correct
 
 3. **Lambda Errors**:
    - Problem: Lambda function fails to execute
