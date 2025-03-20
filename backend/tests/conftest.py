@@ -6,13 +6,16 @@ import os
 # Add the parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Set testing environment variable
+os.environ['TESTING'] = 'True'
+
 from app.main import app
-from app.utils.auth import fake_users_db
+from app.utils.dynamo_client import clear_test_db
 
 @pytest.fixture(autouse=True)
-def clear_fake_db():
-    """Clear the fake database before each test."""
-    fake_users_db.clear()
+def clear_test_database():
+    """Clear the test database before each test."""
+    clear_test_db()
     yield
 
 @pytest.fixture

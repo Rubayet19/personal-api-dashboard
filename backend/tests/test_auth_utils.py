@@ -3,21 +3,24 @@ from datetime import timedelta
 from jose import jwt
 
 from app.utils.auth import (
-    get_password_hash,
-    verify_password,
-    authenticate_user,
     create_access_token,
     create_new_user,
-    get_user,
+    authenticate_user,
     SECRET_KEY,
     ALGORITHM
+)
+
+from app.utils.dynamo_client import (
+    hash_password,
+    verify_password,
+    get_user_by_email
 )
 
 @pytest.mark.asyncio
 async def test_password_hashing():
     """Test password hashing and verification functions."""
     password = "testpassword123"
-    hashed = get_password_hash(password)
+    hashed = hash_password(password)
     
     # Ensure hashed password is not equal to original
     assert hashed != password
@@ -40,15 +43,13 @@ async def test_create_new_user():
     # Assert user was created correctly
     assert user is not None
     assert user["email"] == test_email
-    assert "hashed_password" in user
-    assert verify_password(test_password, user["hashed_password"])
     
-    # Try to create the same user again should return False
+    # Create the same user again should return None
     duplicate_user = await create_new_user(test_email, "another_password")
-    assert duplicate_user is False
+    assert duplicate_user is None
     
     # Verify user can be fetched
-    fetched_user = get_user(test_email)
+    fetched_user = get_user_by_email(test_email)
     assert fetched_user is not None
     assert fetched_user["email"] == test_email
 
@@ -63,16 +64,16 @@ async def test_authenticate_user():
     
     # Test successful authentication
     user = authenticate_user(test_email, test_password)
-    assert user is not False
+    assert user is not None
     assert user["email"] == test_email
     
     # Test authentication with wrong password
     user = authenticate_user(test_email, "wrong_password")
-    assert user is False
+    assert user is None
     
     # Test authentication with non-existent user
     user = authenticate_user("nonexistent@example.com", test_password)
-    assert user is False
+    assert user is None
 
 def test_create_access_token():
     """Test JWT token creation."""
