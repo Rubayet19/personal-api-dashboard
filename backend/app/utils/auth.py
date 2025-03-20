@@ -23,6 +23,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 # In-memory user database for demonstration
 fake_users_db = {}
 
+# Add a placeholder for Google token verification since we removed the button
+def verify_google_token(token: str) -> dict:
+    """Placeholder for Google token verification."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Google authentication has been disabled"
+    )
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash."""
