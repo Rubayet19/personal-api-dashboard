@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from ..schemas.api_key import ApiKeyCreate, ApiKeyUpdate, ApiKey
-from ..utils import api_key_client
+from ..utils import api_key_client, redis_client
 from ..utils.auth import get_current_user
 
 router = APIRouter(
@@ -153,6 +153,10 @@ async def delete_api_key(
                 detail="Not authorized to delete this API key"
             )
         
+        # Get the API name before deleting the key
+        api_name = key.get("api_name")
+        user_id = current_user["sub"]
+        
         # Delete the key
         deleted = api_key_client.delete_api_key(key_id)
         
@@ -161,6 +165,14 @@ async def delete_api_key(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete API key"
             )
+            
+        # Now also delete the rate limit data associated with this API key
+        if api_name:
+            # Convert API name to lowercase for consistent case handling
+            api_name_lower = api_name.lower()
+            # Delete rate limit info from Redis
+            redis_client.delete_rate_limit(api_name=api_name_lower, user_id=user_id)
+            print(f"Deleted rate limit data for API: {api_name_lower} and user: {user_id}")
     except HTTPException:
         raise
     except Exception as e:

@@ -140,6 +140,9 @@ def store_rate_limit(
         user_id: User ID if storing per-user rate limits
         ttl: Time to live in seconds for this cache entry
     """
+    # Normalize API name to lowercase for consistent storage
+    api_name = api_name.lower()
+    
     # Create the rate limit data
     rate_limit = RateLimitData(
         api_name=api_name,
@@ -170,6 +173,9 @@ def get_rate_limit(api_name: str, user_id: Optional[str] = None) -> Optional[Rat
     Returns:
         RateLimitData object or None if not found
     """
+    # Normalize API name to lowercase for consistent retrieval
+    api_name = api_name.lower()
+    
     # Generate Redis key
     key = f"{REDIS_PREFIX}{api_name}"
     if user_id:
@@ -225,6 +231,9 @@ def delete_rate_limit(api_name: str, user_id: Optional[str] = None) -> bool:
     Returns:
         True if deleted, False if not found
     """
+    # Normalize API name to lowercase for consistent deletion
+    api_name = api_name.lower()
+    
     # Generate Redis key
     key = f"{REDIS_PREFIX}{api_name}"
     if user_id:

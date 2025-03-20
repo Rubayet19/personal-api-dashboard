@@ -6,7 +6,7 @@
 - Consider cost optimizations defined in metrics
 - Maintain consistency with existing components
 
-You should do task-based development. Git is already initialized in the project. Follow these principles ALWAYS: TDD, DRY, KISS, YAGNI.
+You should do task-based development. Git is already initialized in the project. Follow these principles ALWAYS: TDD, DRY, KISS, YAGNI. DO NOT CREATE A SEPERATE PORT TO START SERVER. Backend SERVER SHOULD ALWAYS BE STARTED at port 8000 no matter what(there will be grave consequences if you do not follow this rule).
 
 ## Retain Memory
 
