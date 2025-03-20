@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 
 from ..schemas.proxy import ProxyRequest, ProxyResponse
 from ..utils.auth import get_current_user
-from ..utils.mock_db import get_api_key, log_request
+from ..utils.api_key_client import get_api_key
+from ..utils.mock_db import log_request
 from ..utils import redis_client
 
 router = APIRouter(

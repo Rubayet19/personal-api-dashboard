@@ -11,11 +11,13 @@ os.environ['TESTING'] = 'True'
 
 from app.main import app
 from app.utils.dynamo_client import clear_test_db
+from app.utils.api_key_client import clear_test_db as clear_api_key_test_db
 
 @pytest.fixture(autouse=True)
 def clear_test_database():
     """Clear the test database before each test."""
     clear_test_db()
+    clear_api_key_test_db()
     yield
 
 @pytest.fixture

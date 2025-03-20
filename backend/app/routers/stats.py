@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 
 from ..schemas.stats import DashboardStats, RequestLog
 from ..utils.auth import get_current_user
-from ..utils.mock_db import get_api_keys_for_user, get_requests_log
-from ..utils import redis_client
+from ..utils.mock_db import get_requests_log
+from ..utils import api_key_client, redis_client
 
 router = APIRouter(
     prefix="/api/stats",
@@ -22,7 +22,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     user_id = current_user["sub"]
     
     # Get API keys for the user
-    api_keys = get_api_keys_for_user(user_id)
+    api_keys = api_key_client.get_user_api_keys(user_id)
     total_api_keys = len(api_keys) if api_keys else 0
     
     # Get request logs from the last 30 days

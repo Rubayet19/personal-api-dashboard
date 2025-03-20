@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from ..schemas.api_key import ApiKeyCreate, ApiKeyUpdate, ApiKey
-from ..utils import mock_db
+from ..utils import api_key_client
 from ..utils.auth import get_current_user
 
 router = APIRouter(
@@ -23,15 +23,15 @@ async def create_api_key(
         # Get user ID from JWT token
         user_id = current_user["sub"]
         
-        # Create API key in mock DynamoDB
-        key_id = mock_db.create_api_key(
+        # Create API key in DynamoDB
+        key_id = api_key_client.create_api_key(
             user_id=user_id,
             api_name=api_key.api_name,
             api_key=api_key.api_key
         )
         
         # Retrieve the created key to return
-        created_key = mock_db.get_api_key(key_id)
+        created_key = api_key_client.get_api_key(key_id)
         return created_key
     except Exception as e:
         raise HTTPException(
@@ -47,7 +47,7 @@ async def get_user_api_keys(current_user: dict = Depends(get_current_user)):
         user_id = current_user["sub"]
         
         # Get all API keys for the user
-        user_keys = mock_db.get_user_api_keys(user_id)
+        user_keys = api_key_client.get_user_api_keys(user_id)
         return user_keys
     except Exception as e:
         raise HTTPException(
@@ -63,7 +63,7 @@ async def get_api_key(
     """Get a specific API key by ID"""
     try:
         # Get the API key
-        key = mock_db.get_api_key(key_id)
+        key = api_key_client.get_api_key(key_id)
         
         # Check if key exists
         if not key:
@@ -97,7 +97,7 @@ async def update_api_key(
     """Update an API key"""
     try:
         # First get the key to check ownership
-        key = mock_db.get_api_key(key_id)
+        key = api_key_client.get_api_key(key_id)
         
         # Check if key exists
         if not key:
@@ -114,7 +114,7 @@ async def update_api_key(
             )
         
         # Update the key
-        updated_key = mock_db.update_api_key(
+        updated_key = api_key_client.update_api_key(
             key_id=key_id,
             api_name=api_key_update.api_name,
             api_key=api_key_update.api_key
@@ -137,7 +137,7 @@ async def delete_api_key(
     """Delete an API key"""
     try:
         # First get the key to check ownership
-        key = mock_db.get_api_key(key_id)
+        key = api_key_client.get_api_key(key_id)
         
         # Check if key exists
         if not key:
@@ -153,23 +153,14 @@ async def delete_api_key(
                 detail="Not authorized to delete this API key"
             )
         
-        # Get API name before deletion
-        api_name = key.get("api_name", "").lower()
-        
         # Delete the key
-        mock_db.delete_api_key(key_id)
+        deleted = api_key_client.delete_api_key(key_id)
         
-        # Also delete associated rate limits if any
-        try:
-            from ..utils import redis_client
-            if api_name:
-                redis_client.delete_rate_limit(api_name=api_name, user_id=current_user["sub"])
-                print(f"Deleted rate limit data for {api_name}")
-        except Exception as e:
-            # Log error but don't fail the request
-            print(f"Error deleting rate limit data: {e}")
-        
-        return None
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete API key"
+            )
     except HTTPException:
         raise
     except Exception as e:
