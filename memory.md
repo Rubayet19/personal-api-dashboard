@@ -36,6 +36,67 @@ All phases of the project have been completed, with the dashboard now fully func
 3. Update Frontend for AWS Endpoints
 4. Deploy and Test
 
+## DynamoDB Table Structure
+
+The DynamoDB table `api-dashboard` is currently structured as follows:
+
+### Table Configuration
+- **Table Name**: `api-dashboard`
+- **Partition Key (PK)**: String
+- **Sort Key (SK)**: String
+- **Billing Mode**: PAY_PER_REQUEST (On-demand)
+- **Global Secondary Index (GSI1)**:
+  - **Partition Key**: GSI1PK (String)
+  - **Sort Key**: GSI1SK (String)
+  - **Projection**: ALL
+
+### Data Patterns
+
+#### User Records
+```
+{
+  'PK': 'USER#<email>',                 // Partition key - User identifier with email
+  'SK': 'PROFILE',                      // Sort key - Constant value for user profiles
+  'email': '<email>',                   // User's email address
+  'hashed_password': '<bcrypt_hash>',   // Encrypted password using bcrypt
+  'GSI1PK': 'USERS',                    // GSI partition key for querying all users
+  'GSI1SK': '<email>'                   // GSI sort key for sorting users
+}
+```
+
+#### API Key Records
+```
+{
+  'PK': 'USER#<email>',                 // Partition key - User identifier with email
+  'SK': 'APIKEY#<key_id>',              // Sort key - API key identifier with UUID
+  'id': '<key_id>',                     // UUID for the API key
+  'user_id': '<email>',                 // User's email address
+  'api_name': '<service_name>',         // Name of the API service (e.g., 'github')
+  'encrypted_key': '<encrypted_value>', // Encrypted API key value
+  'created_at': '<timestamp>',          // ISO timestamp of creation
+  'updated_at': '<timestamp>',          // ISO timestamp of last update
+  'GSI1PK': 'USER#<email>',             // GSI partition key for querying by user
+  'GSI1SK': 'APIKEY#<key_id>'           // GSI sort key for API keys
+}
+```
+
+### Access Patterns
+
+1. **Get User by Email**
+   - Direct lookup using PK='USER#<email>' and SK='PROFILE'
+
+2. **Get All Users**
+   - Query GSI1 with GSI1PK='USERS'
+
+3. **Get All API Keys for a User**
+   - Query base table with PK='USER#<email>' and SK begins_with('APIKEY#')
+
+4. **Get Specific API Key**
+   - Direct lookup using PK='USER#<email>' and SK='APIKEY#<key_id>'
+   - Alternatively, scan with filter on id='<key_id>' (less efficient)
+
+This structure provides efficient access patterns while maintaining the relationships between users and their API keys. The GSI enables querying across all users or all API keys when needed.
+
 ## AWS Migration Progress
 
 The project is currently being migrated from local development to AWS cloud services. The following AWS resources have been set up:
