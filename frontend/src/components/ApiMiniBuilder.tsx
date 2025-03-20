@@ -8,6 +8,7 @@ import { api } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../lib/hooks/use-toast';
 import { ApiRequestHistory } from './ApiRequestHistory';
+import { isAuthenticated } from '../lib/auth';
 
 // Define response type for API proxy response
 interface ProxyResponse {
@@ -25,18 +26,21 @@ export function ApiMiniBuilder() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleGoToBuilder = () => {
-    // Store the initial values in localStorage to pre-populate the full builder
-    const initialState = {
-      url,
-      method,
-      headers: [{ key: '', value: '', id: Date.now().toString() }],
-      body: '',
-      useApiKey: false,
-      selectedApiKeyId: '',
-      response: null,
-      activeTab: 'headers',
-    };
-    localStorage.setItem('requestBuilderState', JSON.stringify(initialState));
+    // Only store values in localStorage if user is authenticated
+    if (isAuthenticated()) {
+      // Store the initial values in localStorage to pre-populate the full builder
+      const initialState = {
+        url,
+        method,
+        headers: [{ key: '', value: '', id: Date.now().toString() }],
+        body: '',
+        useApiKey: false,
+        selectedApiKeyId: '',
+        response: null,
+        activeTab: 'headers',
+      };
+      localStorage.setItem('requestBuilderState', JSON.stringify(initialState));
+    }
     navigate('/dashboard/request-builder');
   };
 
@@ -66,18 +70,21 @@ export function ApiMiniBuilder() {
         variant: "default"
       });
       
-      // Navigate to the full builder with the results
-      const initialState = {
-        url,
-        method,
-        headers: [{ key: '', value: '', id: Date.now().toString() }],
-        body: '',
-        useApiKey: false,
-        selectedApiKeyId: '',
-        response: response,
-        activeTab: 'headers',
-      };
-      localStorage.setItem('requestBuilderState', JSON.stringify(initialState));
+      // Only store in localStorage if user is authenticated
+      if (isAuthenticated()) {
+        // Navigate to the full builder with the results
+        const initialState = {
+          url,
+          method,
+          headers: [{ key: '', value: '', id: Date.now().toString() }],
+          body: '',
+          useApiKey: false,
+          selectedApiKeyId: '',
+          response: response,
+          activeTab: 'headers',
+        };
+        localStorage.setItem('requestBuilderState', JSON.stringify(initialState));
+      }
       navigate('/dashboard/request-builder');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to complete the request";
