@@ -272,16 +272,10 @@ The system is tested end-to-end:
 
 ### 8.1 Replace Mock Components with AWS Services
 
-- Auth: Remove mock JWT, integrate AWS Cognito.
+
 - Database: Remove Moto, use real AWS DynamoDB.
-- Caching: Switch from local Redis to AWS ElastiCache.
-- Logging: Stream logs to AWS CloudWatch.
 
-### 8.2 Deploy Backend to AWS Lambda
 
-- Use Mangum to adapt FastAPI to Lambda.
-- Configure API Gateway with relevant routes.
-- Ensure environment variables for AWS credentials and resources are set.
 
 ### 8.3 Deploy Frontend to AWS (S3 + CloudFront)
 
@@ -289,11 +283,7 @@ The system is tested end-to-end:
 - Upload static files to an S3 bucket.
 - Configure CloudFront for global distribution (enable HTTPS, custom domain if desired).
 
-**Acceptance Criteria for Phase 8:**
-- Users can log in with AWS Cognito.
-- API keys are stored in a real DynamoDB table.
-- Logs appear in CloudWatch.
-- The app is accessible via a public CloudFront URL.
+
 
 ## 6. Use Cases & User Stories
 
@@ -306,102 +296,8 @@ The system is tested end-to-end:
     * "As a user, I want to build and send custom REST requests so that I can test endpoints from within the dashboard."
 4. **Rate Limit Tracking**
     * "As a user, I want to see how many requests I have remaining for each API so I can avoid hitting rate limits."
-5. **Monitoring**
-    * "As an admin/dev, I want logs of all requests/responses so that I can troubleshoot errors and usage."
-
-## 7. Proposed File Structure
-
-Below is a minimal file structure that keeps things organized while reducing the total number of files. Developers can add or split files if the project grows.
-
-```
-personal-api-dashboard/
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   ├── pages/
-│   │   │   ├── LandingPage.tsx      // Landing/home screen
-│   │   │   ├── DashboardPage.tsx    // Main dashboard UI
-│   │   │   └── AuthPage.tsx         // Login/Signup
-│   │   ├── components/
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── ApiKeyManager.tsx
-│   │   │   ├── ApiRequestForm.tsx
-│   │   │   ├── ApiResponse.tsx
-│   │   │   └── RateLimit.tsx
-│   │   └── tailwind.css             // Tailwind + ShadCN styles
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tsconfig.json
-│
-├── backend/
-│   ├── main.py                      // FastAPI + Strawberry + routes + mock logic
-│   └── requirements.txt
-│
-├── .gitignore
-└── README.md
-├── .cursorrules
-└── memory.md
-├── project.md
-
-```
-
-### Notes on the File Structure
-
-* **frontend/**
-    * **src/**: Core React source code.
-    * **pages/**: Page-level components (Landing, Dashboard, Auth).
-    * **components/**: UI building blocks and specialized components (e.g., request builder, rate limit display).
-    * **tailwind.css**: Central style entry for Tailwind + ShadCN.
-* **backend/**
-    * **main.py**:
-        * FastAPI application instance.
-        * Strawberry GraphQL schema/resolvers.
-        * Mock JWT logic and user login routes.
-        * Mock DynamoDB setup with Moto.
-        * Redis caching logic.
-        * Logging.
-        * To keep it minimal, these can be grouped with clear comment headings.
-    * **requirements.txt**: Python dependencies (fastapi, uvicorn, strawberry-graphql, pyjwt, boto3, redis, etc.).
-* **.gitignore**: Exclude node_modules, Python __pycache__, environment files, etc.
 
 
-## 8. Acceptance Criteria
 
-1. **Core Functionality**
-    * Users can sign up and log in using mock JWTs.
-    * Users can add, update, and delete API keys stored in the mock database.
-    * Users can build and send REST requests to external APIs.
-    * The system displays JSON responses in a readable format.
-    * Logs record each request and response.
-2. **Rate Limit Tracking**
-    * Dashboard accurately shows user's remaining requests (for at least one external API).
-    * Data is cached in local Redis.
-3. **GraphQL Endpoint**
-    * Available at a path like /graphql, serving Strawberry schema.
-    * Can fetch or mutate data (e.g., user info, API key info).
-4. **Deployment**
-    * Phase 1: Runs locally via vite dev for frontend and uvicorn main:app --reload for backend.
-    * Phase 2: Hosted on AWS (Lambda + API Gateway for backend, S3 + CloudFront for frontend).
 
-## 9. Risks & Considerations
 
-1. **Security of API Keys**
-    * Even though it's a personal dashboard, encryption and secure storage are critical.
-2. **Rate Limits**
-    * Some APIs (like GitHub) have fairly generous limits, while others do not. Implement robust error handling and caching.
-3. **AWS Costs**
-    * Certain AWS services can incur costs. Carefully monitor usage in non-production environments.
-4. **Scalability**
-    * For large volumes of data, DynamoDB, ElastiCache, and CloudWatch metrics will be essential.
-    * The architecture is designed to scale if the user base grows.
-5. **User Experience**
-    * Keep the UI minimal but intuitive. Provide immediate feedback for request results or error states.
-
-## Current File Structure
-personal-api-dashboard/
-└── project.md
-└── .cursorrules (or project rules)
-└── memory.md
