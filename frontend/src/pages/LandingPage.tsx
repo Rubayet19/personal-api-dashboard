@@ -543,7 +543,7 @@ function LandingPage() {
             
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <a 
-                href="https://github.com/yourusername/personal-api-dashboard" 
+                href="https://github.com/Rubayet19/personal-api-dashboard" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-800 transition-colors"
