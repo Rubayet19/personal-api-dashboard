@@ -9,21 +9,39 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Redis connection settings from environment variables or defaults
+REDIS_URL = os.getenv("REDIS_URL")  # Railway typically provides this
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")  # Add password support
 REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 REDIS_PREFIX = "rate_limit:"
 
 # Initialize Redis client
 try:
-    redis_client = redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        db=REDIS_DB,
-        decode_responses=True  # Automatically decode responses to strings
-    )
-    redis_client.ping()  # Test connection
-    print(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
+    # If REDIS_URL is provided (Railway typically provides this), use it
+    if REDIS_URL:
+        redis_client = redis.Redis.from_url(
+            REDIS_URL,
+            decode_responses=True  # Automatically decode responses to strings
+        )
+    else:
+        # Otherwise use individual parameters
+        redis_client = redis.Redis(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            password=REDIS_PASSWORD,  # Will be None if not set
+            db=REDIS_DB,
+            decode_responses=True
+        )
+        
+    # Test connection
+    redis_client.ping()
+    
+    # Only log the host/port if not using URL to avoid exposing credentials
+    if REDIS_URL:
+        print(f"Successfully connected to Redis using URL")
+    else:
+        print(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
 except redis.ConnectionError as e:
     print(f"Warning: Could not connect to Redis: {e}")
     # Fallback to a mock in-memory implementation for development
