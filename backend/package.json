@@ -1,0 +1,7 @@
+{
+  "name": "personal-api-dashboard-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+  }
+} 

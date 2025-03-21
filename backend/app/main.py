@@ -15,10 +15,26 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS - More permissive for development
+# Define explicit allowed origins instead of wildcard
+# This is necessary when allow_credentials is True
+allowed_origins = [
+    # Local development origins
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    # Production origins
+    "https://personal-api-dashboard-production.up.railway.app",
+    "http://api-dashboard-frontend-166868085052.s3-website.us-east-2.amazonaws.com",
+    "https://api-dashboard-frontend-166868085052.s3-website.us-east-2.amazonaws.com",
+    # Additional production origins
+    "https://staging.d3n8vbdp15cm9d.amplifyapp.com"
+]
+
+# Configure CORS with explicit origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=allowed_origins,  # Explicit origins instead of wildcard
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
