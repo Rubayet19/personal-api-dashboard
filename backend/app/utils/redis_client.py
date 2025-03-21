@@ -1,12 +1,17 @@
 import redis
 import json
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+from dotenv import load_dotenv
 
-# Redis connection settings
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
+# Load environment variables
+load_dotenv()
+
+# Redis connection settings from environment variables or defaults
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 REDIS_PREFIX = "rate_limit:"
 
 # Initialize Redis client
@@ -18,7 +23,7 @@ try:
         decode_responses=True  # Automatically decode responses to strings
     )
     redis_client.ping()  # Test connection
-    print("Successfully connected to Redis")
+    print(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
 except redis.ConnectionError as e:
     print(f"Warning: Could not connect to Redis: {e}")
     # Fallback to a mock in-memory implementation for development
