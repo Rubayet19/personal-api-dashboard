@@ -1,6 +1,6 @@
 # Personal API Dashboard
 
-A centralized web dashboard for managing, monitoring, and testing various APIs. Built with React, FastAPI, and AWS services.
+A centralized web dashboard for managing, monitoring, and testing various APIs. Built with React, FastAPI, and AWS services. The app can be accessed here: https://staging.d3n8vbdp15cm9d.amplifyapp.com
 
 ## Features
 
@@ -17,16 +17,11 @@ A centralized web dashboard for managing, monitoring, and testing various APIs. 
 - Vite
 - Tailwind CSS
 - shadcn/ui
-- Apollo Client (GraphQL)
 - React Router
-- Zustand (State Management)
 
 ### Backend
 - FastAPI
-- Strawberry GraphQL
 - Redis (Caching)
-- Moto (Mock AWS Services)
-- Python-Jose (JWT)
 
 ### Deployment Options
 - Local development environment
@@ -36,7 +31,7 @@ A centralized web dashboard for managing, monitoring, and testing various APIs. 
   - Amazon API Gateway
   - Amazon DynamoDB (Database)
   - Amazon ElastiCache (Redis)
-  - Amazon S3 & CloudFront (Frontend Hosting)
+  - AWS Amplify (Frontend Hosting)
 
 ## Getting Started
 
@@ -95,31 +90,6 @@ The frontend will be available at `http://localhost:5173`
 
 The backend will be available at `http://localhost:8000`
 
-## Development
-
-- Frontend development server: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
-- API Documentation: `http://localhost:8000/docs`
-- GraphQL Playground: `http://localhost:8000/graphql`
-
-## Project Structure
-
-```
-personal-api-dashboard/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── graphql/
-│   │   ├── hooks/
-│   │   └── utils/
-│   └── ...
-└── backend/
-    ├── app/
-    │   ├── main.py
-    │   └── ...
-    └── tests/
-```
 
 ## Contributing
 
@@ -151,7 +121,3 @@ The application can be run entirely locally with mock services:
    cd frontend
    npm run dev
    ```
-
-### AWS Deployment
-
-See [AWS Deployment Guide](docs/aws-deployment.md) for detailed instructions on deploying to AWS cloud services. 
