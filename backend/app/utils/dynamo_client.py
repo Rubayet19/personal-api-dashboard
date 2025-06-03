@@ -172,4 +172,115 @@ def get_all_users() -> list:
                 del item['hashed_password']
             users.append(item)
         
-        return users 
+        return users
+
+def set_password_reset_token(email: str, token_hash: str, expiry_timestamp: int) -> bool:
+    """
+    Set password reset token for a user.
+    
+    Args:
+        email: User's email address
+        token_hash: Hashed password reset token
+        expiry_timestamp: Unix timestamp when the token expires
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        if IS_TESTING:
+            # For testing, update in-memory dict
+            user_key = f"{USER_PREFIX}{email}"
+            if user_key in test_db:
+                test_db[user_key]['reset_token_hash'] = token_hash
+                test_db[user_key]['reset_token_expiry'] = expiry_timestamp
+                return True
+            return False
+        else:
+            # Update in DynamoDB
+            response = table.update_item(
+                Key={
+                    'PK': f"{USER_PREFIX}{email}",
+                    'SK': PROFILE_SUFFIX
+                },
+                UpdateExpression='SET reset_token_hash = :token_hash, reset_token_expiry = :expiry',
+                ExpressionAttributeValues={
+                    ':token_hash': token_hash,
+                    ':expiry': expiry_timestamp
+                },
+                ConditionExpression='attribute_exists(PK)'  # Ensure user exists
+            )
+            return True
+    except Exception as e:
+        print(f"Error setting password reset token for {email}: {e}")
+        return False
+
+def update_user_password(email: str, new_hashed_password: str) -> bool:
+    """
+    Update a user's password.
+    
+    Args:
+        email: User's email address
+        new_hashed_password: New hashed password
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        if IS_TESTING:
+            # For testing, update in-memory dict
+            user_key = f"{USER_PREFIX}{email}"
+            if user_key in test_db:
+                test_db[user_key]['hashed_password'] = new_hashed_password
+                return True
+            return False
+        else:
+            # Update in DynamoDB
+            response = table.update_item(
+                Key={
+                    'PK': f"{USER_PREFIX}{email}",
+                    'SK': PROFILE_SUFFIX
+                },
+                UpdateExpression='SET hashed_password = :password',
+                ExpressionAttributeValues={
+                    ':password': new_hashed_password
+                },
+                ConditionExpression='attribute_exists(PK)'  # Ensure user exists
+            )
+            return True
+    except Exception as e:
+        print(f"Error updating password for {email}: {e}")
+        return False
+
+def clear_password_reset_token(email: str) -> bool:
+    """
+    Clear password reset token for a user (after successful password reset).
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        if IS_TESTING:
+            # For testing, remove from in-memory dict
+            user_key = f"{USER_PREFIX}{email}"
+            if user_key in test_db:
+                test_db[user_key].pop('reset_token_hash', None)
+                test_db[user_key].pop('reset_token_expiry', None)
+                return True
+            return False
+        else:
+            # Remove from DynamoDB
+            response = table.update_item(
+                Key={
+                    'PK': f"{USER_PREFIX}{email}",
+                    'SK': PROFILE_SUFFIX
+                },
+                UpdateExpression='REMOVE reset_token_hash, reset_token_expiry',
+                ConditionExpression='attribute_exists(PK)'  # Ensure user exists
+            )
+            return True
+    except Exception as e:
+        print(f"Error clearing password reset token for {email}: {e}")
+        return False 

@@ -1,18 +1,22 @@
 from datetime import datetime, timedelta
 from typing import Optional
+import os
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+from dotenv import load_dotenv
 
 from ..schemas.auth import TokenData
 from .dynamo_client import authenticate_user as db_authenticate_user
 
-# Mock secret key - in a real application, store this in environment variables
-# and use a more secure value
-SECRET_KEY = "YOUR_SECRET_KEY_HERE"
+# Load environment variables
+load_dotenv()
+
+# JWT Configuration from environment variables
+SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'fallback-secret-key-for-development-only')
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', '30'))
 
 # OAuth2 scheme for token extraction from request
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")

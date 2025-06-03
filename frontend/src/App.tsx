@@ -4,6 +4,8 @@ import DashboardPage from './pages/DashboardPage'
 import ApiKeysPage from './pages/ApiKeysPage'
 import { ApiTestPage } from './pages/ApiTestPage'
 import { RateLimitsPage } from './pages/RateLimitsPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import { Toaster } from './components/ui/toaster'
 import { KeyUpdateProvider } from './contexts/KeyUpdateContext'
@@ -15,6 +17,8 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             
             {/* Protected Dashboard Routes */}
             <Route element={<ProtectedRoute />}>

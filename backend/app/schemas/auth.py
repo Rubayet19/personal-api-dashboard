@@ -24,4 +24,14 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    sub: str 
+    sub: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    token: str
+    new_password: str = Field(..., min_length=6) 

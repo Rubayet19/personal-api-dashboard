@@ -15,6 +15,58 @@ All phases of the project have been completed, with the dashboard now fully func
 - Request history display directly on the dashboard
 - Real-time dashboard updates when API keys are changed
 - User profile dropdown with account information
+- **NEW: Forgot Password feature** with email-based password reset flow
+
+## Latest Feature: Forgot Password Implementation
+
+### Backend Implementation Completed ✅
+1. **Environment Setup**:
+   - Added Brevo email service integration with sib-api-v3-sdk==7.6.0
+   - Gmail SMTP fallback system for reliability
+   - Environment variables for email configuration
+   - Fixed bcrypt compatibility by downgrading to bcrypt==4.1.3
+
+2. **Core Components**:
+   - `email_client.py`: Brevo SDK + Gmail SMTP fallback with professional HTML templates
+   - `token_utils.py`: Cryptographically secure token generation and validation
+   - Updated `dynamo_client.py`: Password reset token storage and management
+   - Updated `auth.py` router: `/auth/forgot-password` and `/auth/reset-password` endpoints
+
+3. **Security Features**:
+   - Tokens are hashed before database storage using bcrypt
+   - One-hour token expiration
+   - One-time use tokens (cleared after successful reset)
+   - Generic success messages to prevent email enumeration
+   - Secure token generation using `secrets.token_urlsafe(32)`
+
+### Frontend Implementation Completed ✅
+1. **Routing**: 
+   - `/forgot-password` and `/reset-password` routes added to App.tsx ✅
+   - **FIXED**: Missing route imports and definitions in App.tsx
+
+2. **Components**:
+   - `ForgotPasswordPage.tsx`: Email input form with validation and success states
+   - `ResetPasswordPage.tsx`: Password reset form with token validation
+   - Updated `AuthModal.tsx`: Added "Forgot Password" link in login form
+
+3. **API Integration**:
+   - `requestPasswordReset()` and `resetPassword()` functions in auth.ts
+   - Error handling and loading states
+   - URL parameter extraction for email and token
+
+### Technical Issues Resolved ✅
+1. **Module Import Error**: Fixed sib_api_v3_sdk installation in correct Python environment
+2. **Bcrypt Version Error**: Downgraded bcrypt from 4.3.0 to 4.1.3 for compatibility
+3. **Brevo Account Not Activated**: Implemented Gmail SMTP fallback system
+4. **Missing Routes**: Fixed missing ForgotPasswordPage and ResetPasswordPage imports/routes in App.tsx
+
+### Current Status ✅
+- Backend server running on port 8000
+- Frontend server running on port 5173
+- Complete forgot password flow implemented and functional
+- Requires user to add email credentials to .env file:
+  - `BREVO_API_KEY` (optional if using Gmail)
+  - `GMAIL_EMAIL` and `GMAIL_APP_PASSWORD` for immediate functionality
 
 ## AWS Migration Status
 

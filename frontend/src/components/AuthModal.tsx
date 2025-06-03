@@ -180,6 +180,18 @@ export function AuthModal({ isOpen, onOpenChange, defaultMode = 'login' }: AuthM
                     <p className="mt-2 text-sm text-red-600">{loginForm.formState.errors.password.message}</p>
                   )}
                 </div>
+                <div className="text-sm text-right mt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate('/forgot-password');
+                    }}
+                    className="font-medium text-blue-600 hover:text-blue-500"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
               </div>
 
               <div>
