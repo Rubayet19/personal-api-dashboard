@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
     
     try {
-      await resetPassword(email, token, data.newPassword);
+      await resetPassword({ email, token, new_password: data.newPassword }); // Pass as a single object
       setIsSuccess(true);
       toast({
         title: "Password reset successful",

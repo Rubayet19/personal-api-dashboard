@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     
     try {
-      await requestPasswordReset(data.email);
+      await requestPasswordReset({ email: data.email }); // Pass as an object
       setIsSubmitted(true);
       toast({
         title: "Reset link sent",
